@@ -1,0 +1,7 @@
+{
+    "title": "拖拽或选择文件",
+    "title.multiple": "拖拽或选择多个文件",
+    "title.drop": "放到这里",
+    "title.drop.multiple": "放到这里",
+    "accept": "支持格式：{{ formats }}。"
+}

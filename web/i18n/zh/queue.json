@@ -1,0 +1,16 @@
+{
+    "title": "处理队列",
+    "stub": "这里还没有任务。\n试着下载点什么吧！",
+
+    "state.waiting": "排队中",
+    "state.retrying": "重试中",
+    "state.starting": "启动中",
+
+    "state.starting.fetch": "开始下载",
+    "state.starting.remux": "开始重封装",
+    "state.starting.encode": "开始转码",
+
+    "state.running.remux": "重封装中",
+    "state.running.fetch": "下载中",
+    "state.running.encode": "转码中"
+}

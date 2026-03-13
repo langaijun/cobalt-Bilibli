@@ -1,0 +1,22 @@
+{
+    "no_final_file": "未生成最终文件",
+    "worker_didnt_start": "无法启动处理 Worker",
+
+    "generic_error": "处理 Worker 崩溃，详见控制台",
+
+    "fetch.crashed": "下载 Worker 崩溃，详见控制台",
+    "fetch.bad_response": "无法访问文件隧道",
+    "fetch.no_file_reader": "无法写入缓存",
+    "fetch.empty_tunnel": "文件隧道为空，请稍后重试",
+    "fetch.corrupted_file": "文件未完整下载，请重试",
+    "fetch.network_error": "下载因网络问题中断",
+
+    "ffmpeg.probe_failed": "无法探测该文件，可能格式不支持或已损坏",
+    "ffmpeg.out_of_memory": "内存不足，无法继续",
+    "ffmpeg.no_input_format": "不支持该文件格式",
+    "ffmpeg.no_input_type": "不支持该文件类型",
+    "ffmpeg.crashed": "ffmpeg Worker 崩溃，详见控制台",
+    "ffmpeg.no_render": "ffmpeg 输出为空，出现异常",
+    "ffmpeg.no_args": "ffmpeg Worker 未收到必要参数",
+    "ffmpeg.no_audio_channel": "该视频无音轨，无法处理"
+}

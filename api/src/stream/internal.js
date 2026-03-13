@@ -6,7 +6,7 @@ import { handleHlsPlaylist, isHlsResponse, probeInternalHLSTunnel } from "./inte
 const CHUNK_SIZE = BigInt(8e6); // 8 MB
 const min = (a, b) => a < b ? a : b;
 
-const serviceNeedsChunks = new Set(["youtube", "vk"]);
+const serviceNeedsChunks = new Set(["youtube", "vk", "bilibili"]);
 
 async function* readChunks(streamInfo, size) {
     let read = 0n, chunksSinceTransplant = 0;
@@ -22,7 +22,9 @@ async function* readChunks(streamInfo, size) {
             },
             dispatcher: streamInfo.dispatcher,
             signal: streamInfo.controller.signal,
-            maxRedirections: 4
+            maxRedirections: 4,
+            bodyTimeout: 600000,
+            headersTimeout: 60000,
         });
 
         if (chunk.statusCode === 403 && chunksSinceTransplant >= 3 && streamInfo.transplant) {
@@ -114,7 +116,9 @@ async function handleGenericStream(streamInfo, res) {
             },
             dispatcher: streamInfo.dispatcher,
             signal,
-            maxRedirections: 16
+            maxRedirections: 16,
+            bodyTimeout: 600000,
+            headersTimeout: 60000,
         });
 
         res.status(fileResponse.statusCode);

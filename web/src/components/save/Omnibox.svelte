@@ -46,6 +46,7 @@
     let isLoading = $state(false);
 
     let isHovered = $state(false);
+    let pasteError = $state("");
 
     let isBotCheckOngoing = $derived($turnstileEnabled && !$turnstileSolved);
 
@@ -83,9 +84,13 @@
         }
 
         hapticSwitch();
+        pasteError = "";
 
         const pastedData = await pasteLinkFromClipboard();
-        if (!pastedData) return;
+        if (!pastedData) {
+            pasteError = $t("save.paste.denied");
+            return;
+        }
 
         const linkMatch = pastedData.match(/https?\:\/\/[^\s]+/g);
 
@@ -172,8 +177,8 @@
             id="link-area"
             bind:value={$link}
             bind:this={linkInput}
-            oninput={() => (isFocused = true)}
-            onfocus={() => (isFocused = true)}
+            oninput={() => { isFocused = true; pasteError = ""; }}
+            onfocus={() => { isFocused = true; pasteError = ""; }}
             onblur={() => (isFocused = false)}
             onmouseover={() => (isHovered = true)}
             onmouseleave={() => (isHovered = false)}
@@ -196,6 +201,10 @@
             bind:loading={isLoading}
         />
     </div>
+
+    {#if pasteError}
+        <p id="paste-error" role="alert">{pasteError}</p>
+    {/if}
 
     <div id="action-container">
         <Switcher>
@@ -234,6 +243,12 @@
 </div>
 
 <style>
+    #paste-error {
+        margin: 0;
+        font-size: 13px;
+        color: var(--secondary);
+    }
+
     #omnibox {
         display: flex;
         flex-direction: column;

@@ -1,0 +1,13 @@
+{
+    "link_area": "链接输入区",
+    "link_area.turnstile": "链接输入区。正在验证是否为真人。",
+    "clear_input": "清空输入",
+    "download": "下载",
+    "download.think": "正在处理链接…",
+    "download.check": "正在验证下载…",
+    "download.done": "下载完成",
+    "download.error": "下载出错",
+
+    "tutorial.shortcut.photos": "添加保存到相册快捷方式",
+    "tutorial.shortcut.files": "添加保存到文件快捷方式"
+}

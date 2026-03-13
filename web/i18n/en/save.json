@@ -1,6 +1,7 @@
 {
     "paste": "paste",
     "paste.long": "paste and download",
+    "paste.denied": "Clipboard access denied. Paste (Ctrl+V) in the input box instead.",
     "auto": "auto",
     "audio": "audio",
     "mute": "mute",

@@ -26,6 +26,9 @@ export default async function (streamInfo, res) {
             signal: abortController.signal,
             maxRedirections: 16,
             dispatcher: defaultAgent,
+            // 延长超时，避免大文件/慢速下载被误判断开（默认 300 秒）
+            bodyTimeout: 600000,  // 10 分钟无数据才超时
+            headersTimeout: 60000, // 60 秒等响应头
         });
 
         res.status(statusCode);

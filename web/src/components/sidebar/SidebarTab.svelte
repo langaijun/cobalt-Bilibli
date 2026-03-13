@@ -37,6 +37,7 @@
     id="sidebar-tab-{name}"
     class="sidebar-tab"
     class:active={isTabActive}
+    class:save-tab={name === 'save'}
     href={path}
     bind:this={tab}
     on:focus={() => showTab(tab)}
@@ -92,6 +93,12 @@
         transition: none;
         animation: pressButton 0.3s;
         cursor: default;
+    }
+
+    /* 极简版：侧栏「下载」与主区下载按钮同色（灰色） */
+    .sidebar-tab.active.save-tab {
+        background: var(--gray);
+        color: #fff;
     }
 
     .sidebar-tab:not(.active):active {

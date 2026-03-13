@@ -1,0 +1,63 @@
+{
+    "auth.jwt.missing": "无法与处理实例认证：访问令牌缺失。请稍后重试或刷新页面。",
+    "auth.jwt.invalid": "无法与处理实例认证：访问令牌无效。请稍后重试或刷新页面。",
+    "auth.turnstile.missing": "无法与处理实例认证：验证码结果缺失。请稍后重试或刷新页面。",
+    "auth.turnstile.invalid": "无法与处理实例认证：验证码结果无效。请稍后重试或刷新页面。",
+
+    "auth.key.missing": "该处理实例需要访问密钥但未提供。请在实例设置中添加。",
+    "auth.key.not_api_key": "该处理实例需要访问密钥但未提供。请在实例设置中添加。",
+
+    "auth.key.invalid": "访问密钥无效。请在实例设置中重置并填写正确密钥。",
+    "auth.key.not_found": "使用的访问密钥未找到。请确认该实例已配置你的密钥。",
+    "auth.key.invalid_ip": "无法解析你的 IP 地址，请反馈此问题。",
+    "auth.key.ip_not_allowed": "你的 IP 未被允许使用此访问密钥。请换实例或网络。",
+    "auth.key.ua_not_allowed": "你的浏览器/设备未被允许使用此访问密钥。请换客户端或设备。",
+
+    "unreachable": "无法连接处理实例。请检查网络后重试。",
+    "timed_out": "处理实例响应超时，可能正繁忙，请稍后重试。",
+    "rate_exceeded": "请求过于频繁，请 {{ limit }} 秒后再试。",
+    "capacity": "Cobalt 当前负载已满，请稍后重试。",
+
+    "generic": "出了点问题，请稍后重试。若持续出现请反馈。",
+    "unknown_response": "无法解析处理实例的响应，可能是网页版本过旧。请刷新后重试。",
+    "invalid_body": "无法向处理实例发送请求，可能是网页版本过旧。请刷新后重试。",
+
+    "service.unsupported": "该平台暂不支持，请确认链接是否正确。",
+    "service.disabled": "该平台在本处理实例上已禁用。请换其他平台的链接。",
+    "service.audio_not_supported": "该平台不支持提取音频。请换其他平台。",
+
+    "link.invalid": "链接无效或该平台暂不支持。请确认链接是否正确。",
+    "link.unsupported": "支持 {{ service }}，但无法识别该链接。请确认是否粘贴正确。",
+
+    "fetch.fail": "从 {{ service }} 获取信息时出错。若持续出现请反馈。",
+    "fetch.critical": "{{ service }} 返回了未知错误。请稍后重试，若持续请反馈。",
+    "fetch.critical.core": "核心模块返回了未知错误。请稍后重试，若持续请反馈。",
+    "fetch.empty": "未找到可下载的媒体，请确认链接是否正确。",
+    "fetch.rate": "处理实例被 {{ service }} 限流。请稍后重试。",
+    "fetch.short_link": "无法从短链接获取信息。请确认链接有效；若有效仍报错请反馈。",
+
+    "content.too_long": "请求的媒体过长。本实例时长限制为 {{ limit }} 分钟。请换更短的内容。",
+
+    "content.video.unavailable": "无法访问该视频，可能在 {{ service }} 侧受限。请换其他链接。",
+    "content.video.live": "该视频正在直播，暂无法下载。请等直播结束后再试。",
+    "content.video.private": "该视频为私密，无法访问。请改为公开或换其他视频。",
+    "content.video.age": "该视频有年龄限制，无法匿名访问。请登录或换其他链接。",
+    "content.video.region": "该视频有地区限制，处理实例所在地区不可用。请换其他链接。",
+
+    "content.region": "该内容有地区限制，处理实例所在地区不可用。请换其他链接。",
+    "content.paid": "该内容需付费。Cobalt 无法下载付费内容。请换其他链接。",
+
+    "content.post.unavailable": "无法获取该帖子的信息，可能可见性受限或不存在。请确认链接有效后重试。",
+    "content.post.private": "该帖子来自私密账号，无法获取。请换其他链接。",
+    "content.post.age": "该帖子有年龄限制，无法匿名访问。请换其他链接。",
+
+    "youtube.no_matching_format": "YouTube 未返回可用格式，可能 Cobalt 暂不支持或 YouTube 正在重新编码。请稍后重试，若持续请反馈。",
+    "youtube.decipher": "YouTube 更新了解密逻辑，无法解析视频信息。请稍后重试，若持续请反馈。",
+    "youtube.login": "YouTube 要求处理实例证明非机器人，无法获取该视频。请稍后重试，若持续请反馈。",
+    "youtube.token_expired": "YouTube 令牌过期且未刷新。请稍后重试，若持续请反馈。",
+    "youtube.no_hls_streams": "未找到匹配的 HLS 流。请尝试关闭 HLS 选项后下载。",
+    "youtube.api_error": "YouTube 接口有变动，无法获取该视频信息。请稍后重试，若持续请反馈。",
+    "youtube.temporary_disabled": "因 YouTube 侧限制，下载功能暂时关闭。我们正在寻找解决方案。\n\n请关注 Cobalt 的社交或 GitHub 获取进展。",
+    "youtube.drm": "该 YouTube 视频受 Widevine DRM 保护，无法下载。请换其他链接。",
+    "youtube.no_session_tokens": "无法获取 YouTube 所需会话令牌，可能受 YouTube 限制。请稍后重试，若持续请反馈。"
+}

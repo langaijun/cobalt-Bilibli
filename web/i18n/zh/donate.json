@@ -1,0 +1,37 @@
+{
+    "banner.title": "支持一个安全、开放的互联网",
+    "banner.subtitle": "捐赠给 imput，或把 Cobalt 分享给朋友",
+
+    "body.motivation": "Cobalt 帮助创作者、教育者、视频作者等做他们喜欢的事。这是一款为爱而生、非营利导向的服务。",
+    "body.no_bullshit": "我们相信互联网不必令人不安，因此 Cobalt 永不会有广告或恶意内容。我们致力于隐私、无障碍与易用，让每个人都能使用 Cobalt。",
+    "body.keep_going": "若 Cobalt 对你有帮助，请考虑支持我们！可通过捐赠或把 Cobalt 分享给朋友。每一份捐赠都让我们能继续维护 Cobalt 与其他项目。",
+
+    "card.once": "一次性捐赠",
+    "card.recurring": "定期捐赠",
+    "card.custom": "自定义金额（最低 $2）",
+
+    "card.processor": "通过 {{value}}",
+
+    "card.option.5": "一杯咖啡",
+    "card.option.10": "一份披萨",
+    "card.option.15": "一顿午餐",
+    "card.option.30": "双人午餐",
+    "card.option.50": "10kg 猫粮",
+    "card.option.100": "一年域名",
+    "card.option.200": "空气炸锅",
+    "card.option.500": "办公椅",
+    "card.option.1599": "MacBook Pro 基础款",
+    "card.option.4900": "10,000 个苹果",
+    "card.option.7398": "顶配 MacBook Pro",
+    "card.option.8629": "一小块地",
+    "card.option.9433": "豪华按摩浴缸",
+
+    "card.custom.submit": "捐赠自定义金额",
+
+    "share.title": "把 Cobalt 分享给朋友",
+
+    "alternative.title": "其他捐赠方式",
+
+    "alt.copy": "{{ value }}。加密货币地址。点击复制。",
+    "alt.open": "{{ value }}。点击打开。"
+}

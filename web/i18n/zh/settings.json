@@ -1,0 +1,161 @@
+{
+    "page.appearance": "外观",
+    "page.privacy": "隐私",
+    "page.video": "视频",
+    "page.audio": "音频",
+    "page.metadata": "元数据",
+    "page.advanced": "高级",
+    "page.debug": "开发者信息",
+    "page.instances": "实例",
+    "page.local": "本地处理",
+    "page.accessibility": "无障碍",
+
+    "theme": "主题",
+    "theme.auto": "跟随系统",
+    "theme.light": "浅色",
+    "theme.dark": "深色",
+    "theme.description": "跟随系统会根据设备显示模式在浅色与深色间切换。",
+
+    "video.quality": "视频画质",
+    "video.quality.max": "8K+",
+    "video.quality.2160": "4K",
+    "video.quality.1440": "1440p",
+    "video.quality.1080": "1080p",
+    "video.quality.720": "720p",
+    "video.quality.480": "480p",
+    "video.quality.360": "360p",
+    "video.quality.240": "240p",
+    "video.quality.144": "144p",
+    "video.quality.description": "若首选画质不可用，将自动选择次优画质。",
+
+    "video.youtube.codec": "YouTube 视频编码偏好",
+    "video.youtube.codec.description": "h264：兼容性最好，画质一般，最高 1080p。\nav1：画质与效率最佳，支持 8K 与 HDR。\nvp9：画质与 av1 相当，文件约大 2 倍，支持 4K 与 HDR。\n\nav1 与 vp9 支持有限，播放/编辑可能需要额外软件。首选不可用时 Cobalt 会选次优编码。",
+
+    "video.youtube.container": "YouTube 文件容器",
+    "video.youtube.container.description": "选「自动」时，Cobalt 会根据所选编码自动选择最佳容器：h264 用 mp4；vp9/av1 用 webm。",
+
+    "video.youtube.hls": "YouTube HLS 格式",
+    "video.youtube.hls.title": "视频与音频优先使用 HLS",
+    "video.youtube.hls.description": "此模式仅支持 h264 和 vp9。原始音频为 aac，会为兼容性重新编码，音质可能略逊于非 HLS。\n\n该选项为实验性，可能在未来变更或移除。",
+
+    "video.twitter.gif": "Twitter / X",
+    "video.twitter.gif.title": "将循环视频转为 GIF",
+    "video.twitter.gif.description": "GIF 转换效率较低，文件可能较大且画质一般。",
+
+    "video.h265": "高效视频编码",
+    "video.h265.title": "允许使用 H.265 视频",
+    "video.h265.description": "允许从 TikTok、小红书等平台下载更高画质，但兼容性会降低。",
+
+    "audio.format": "音频格式",
+    "audio.format.best": "最佳",
+    "audio.format.mp3": "mp3",
+    "audio.format.ogg": "ogg",
+    "audio.format.wav": "wav",
+    "audio.format.opus": "opus",
+    "audio.format.description": "除「最佳」外均为从源格式转换，会有一定音质损失。「最佳」时尽量保留原始格式。",
+
+    "audio.bitrate": "音频比特率",
+    "audio.bitrate.kbps": "kb/s",
+    "audio.bitrate.description": "仅在转换为有损格式时生效。Cobalt 无法提升源音质，超过 128kbps 可能只增加体积而无听感提升。",
+
+    "audio.youtube.dub": "YouTube 音轨",
+    "audio.youtube.dub.title": "偏好配音语言",
+    "audio.youtube.dub.description": "若有该语言配音，Cobalt 会优先使用，否则使用原声。",
+    "youtube.dub.original": "原声",
+
+    "subtitles": "字幕",
+    "subtitles.title": "首选字幕语言",
+    "subtitles.description": "若有该语言字幕，Cobalt 会将其写入下载文件。\n\n部分服务无语言选择，此时只要选了任意语言就会添加唯一可用字幕轨。",
+    "subtitles.none": "无",
+
+    "audio.youtube.better_audio": "YouTube 音质",
+    "audio.youtube.better_audio.title": "优先更高音质",
+    "audio.youtube.better_audio.description": "音频模式下 Cobalt 会尽量选择最高音质。是否可用取决于 YouTube 响应、流量与服务器状态，自定义实例可能不支持。",
+
+    "audio.tiktok.original": "TikTok",
+    "audio.tiktok.original.title": "下载原声",
+    "audio.tiktok.original.description": "下载视频中的原始声音，不做作者二次处理。",
+
+    "metadata.filename": "文件名风格",
+    "metadata.filename.classic": "经典",
+    "metadata.filename.basic": "基础",
+    "metadata.filename.pretty": "美观",
+    "metadata.filename.nerdy": "极客",
+    "metadata.filename.description": "仅对经 Cobalt 隧道的文件生效。部分服务仅支持经典风格。",
+
+    "metadata.filename.preview.video": "视频标题 - 作者",
+    "metadata.filename.preview.audio": "音频标题 - 作者",
+    "filename.preview_desc.video": "视频文件名预览",
+    "filename.preview_desc.audio": "音频文件名预览",
+
+    "metadata.file": "文件元数据",
+    "metadata.disable.title": "禁用文件元数据",
+    "metadata.disable.description": "不向文件写入标题、作者等信息。",
+
+    "saving.title": "保存方式",
+    "saving.ask": "每次询问",
+    "saving.download": "下载",
+    "saving.share": "分享",
+    "saving.copy": "复制链接",
+    "saving.description": "从 Cobalt 保存文件或链接的偏好方式。若不可用或出错，Cobalt 会询问你。",
+
+    "accessibility.visual": "视觉",
+    "accessibility.haptics": "触觉",
+    "accessibility.behavior": "行为",
+
+    "accessibility.transparency.title": "降低透明度",
+    "accessibility.transparency.description": "降低界面透明度并关闭模糊效果，在低性能设备上可能提升流畅度。",
+    "accessibility.motion.title": "减少动效",
+    "accessibility.motion.description": "尽可能关闭动画与过渡。",
+    "accessibility.haptics.title": "关闭触觉反馈",
+    "accessibility.haptics.description": "关闭所有震动反馈。",
+    "accessibility.auto_queue.title": "不自动打开处理队列",
+    "accessibility.auto_queue.description": "新任务加入时不会自动打开处理队列，进度仍会显示，可手动打开。",
+
+    "language": "语言",
+    "language.auto.title": "自动选择",
+    "language.auto.description": "有对应翻译时使用浏览器默认语言，否则使用英语。",
+    "language.preferred.title": "首选语言",
+    "language.preferred.description": "关闭自动选择后使用此语言。未翻译内容将显示为英语。\n\n部分语言为社区翻译，可能不完整或有误。",
+
+    "privacy.analytics": "匿名访问统计",
+    "privacy.analytics.title": "不参与统计",
+    "privacy.analytics.description": "匿名统计用于估算活跃用户量，不会存储可识别信息，数据经匿名与聚合处理。\n\n我们使用自托管的 Plausible，无 Cookie，符合 GDPR、CCPA、PECR。",
+    "privacy.analytics.learnmore": "了解更多关于 Plausible 的隐私承诺。",
+
+    "privacy.tunnel": "隧道",
+    "privacy.tunnel.title": "始终经隧道下载",
+    "privacy.tunnel.description": "隐藏你的 IP 与浏览器信息，并可绕过本地网络限制。开启后文件会使用可读文件名（否则可能为乱码）。",
+
+    "advanced.debug": "调试",
+    "advanced.debug.title": "开启开发者功能",
+    "advanced.debug.description": "便于查看应用信息以排查问题，不影响正常使用。",
+
+    "processing.community": "社区实例",
+    "processing.enable_custom.title": "使用自定义处理服务器",
+    "processing.enable_custom.description": "可选择使用自定义处理实例。尽管 Cobalt 有安全措施，我们无法控制社区实例，不对其造成的损害负责。\n\n请谨慎选择并仅使用可信托管方的实例。",
+
+    "processing.access_key": "实例访问密钥",
+    "processing.access_key.title": "使用实例访问密钥",
+    "processing.access_key.description": "Cobalt 将使用此密钥向处理实例发起请求。请确认实例支持 API 密钥。",
+
+    "processing.custom_instance.input.alt_text": "自定义实例域名",
+    "processing.access_key.input.alt_text": "UUID 访问密钥",
+
+    "advanced.settings_data": "设置数据",
+    "advanced.local_storage": "本地存储",
+
+    "local.saving": "本地媒体处理",
+    "local.saving.description": "下载媒体时，重封装与转码在设备本地完成，处理队列中会显示进度。\n\n关闭：不使用本地处理（实例可强制开启）。\n首选：需要额外处理的经处理队列下载，其余由浏览器下载。\n强制：所有媒体均经处理队列下载。\n\n仅设备端功能不受此设置影响。",
+    "local.saving.disabled": "关闭",
+    "local.saving.preferred": "首选",
+    "local.saving.forced": "强制",
+
+    "local.webcodecs": "WebCodecs",
+    "local.webcodecs.title": "使用 WebCodecs 进行本地处理",
+    "local.webcodecs.description": "解码或编码时，Cobalt 会尝试使用 WebCodecs，可启用 GPU 加速，显著加快处理。\n\n可用性与稳定性取决于设备与浏览器，可能出现异常。",
+
+    "tabs": "导航",
+    "tabs.hide_remux": "隐藏重封装标签",
+    "tabs.hide_remux.description": "若不需要重封装工具，可在导航栏中隐藏。"
+}

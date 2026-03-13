@@ -1,0 +1,28 @@
+{
+    "paste": "粘贴",
+    "paste.long": "粘贴并下载",
+    "paste.denied": "无法读取剪贴板，请直接在输入框内按 Ctrl+V 粘贴。",
+    "auto": "自动",
+    "audio": "仅音频",
+    "mute": "静音视频",
+    "input.placeholder": "粘贴或输入视频链接",
+    "terms.note.agreement": "继续即表示同意",
+    "terms.note.link": "条款与使用规范",
+    "services.title": "支持的平台",
+    "services.title_show": "显示支持的平台",
+    "services.title_hide": "隐藏支持的平台",
+    "services.disclaimer": "对某平台的支持仅表示技术兼容，不代表隶属、背书或任何其他关系。",
+
+    "tutorial.title": "在 iOS 上如何保存？",
+    "tutorial.intro": "在 iOS 上方便保存媒体，需在分享菜单中使用配套的 Siri 快捷指令。",
+    "tutorial.step.1": "添加配套 Siri 快捷指令：",
+    "tutorial.step.2": "在 Cobalt 保存对话框中点击「分享」。",
+    "tutorial.step.3": "在分享菜单中选择对应快捷指令。",
+    "tutorial.outro": "这些快捷指令仅在 Cobalt 应用内有效，从其他应用分享的链接无法使用。",
+    "tutorial.shortcut.photos": "保存到相册",
+    "tutorial.shortcut.files": "保存到文件",
+
+    "label.community_instance": "社区实例",
+
+    "tooltip.captcha": "Cloudflare Turnstile 正在验证是否为真人，请稍候。"
+}

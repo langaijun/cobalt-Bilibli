@@ -1,0 +1,5 @@
+{
+    "status.default": "处理队列",
+    "status.completed": "处理队列。全部任务已完成。",
+    "status.ongoing": "处理队列。有任务进行中。"
+}

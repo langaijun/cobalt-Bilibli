@@ -1,0 +1,22 @@
+{
+    "reset_settings.title": "确定要重置所有设置吗？",
+    "reset_settings.body": "此操作将立即且不可恢复地重置所有设置，确定继续？",
+
+    "picker.title": "选择要保存的内容",
+    "picker.description.desktop": "点击项目即可保存。图片也可通过右键菜单保存。",
+    "picker.description.phone": "点击项目即可保存。图片也可长按保存。",
+    "picker.description.ios": "点击项目可通过快捷指令保存。图片也可长按保存。",
+
+    "saving.title": "选择保存方式",
+    "saving.blocked": "Cobalt 尝试在新标签页打开文件，但被浏览器拦截。可允许 Cobalt 的弹窗以避免此问题。",
+    "saving.timeout": "Cobalt 尝试自动保存，但被浏览器中止。请手动选择保存方式。",
+
+    "safety.title": "重要安全提示",
+
+    "import.body": "导入未知或损坏的文件可能意外改变或破坏 Cobalt 功能。仅导入你本人导出且未修改的文件。若有人要求你导入某文件，请勿照做。\n\n我们不对因导入未知设置文件造成的任何损害负责。",
+
+    "safety.custom_instance.body": "自定义实例可能带来隐私与安全风险。\n\n不良实例可能：\n1. 将你重定向到其他页面并试图诈骗。\n2. 记录你的请求信息并永久保存、用于追踪。\n3. 提供恶意文件（如木马）。\n4. 强制你看广告或付费下载。\n\n在此之后我们无法保护你。请谨慎选择实例，如有异常请回到本页重置自定义实例并向我们反馈。",
+
+    "clear_cache.title": "确定清空所有缓存？",
+    "clear_cache.body": "处理队列中的文件将被移除，本地功能加载会变慢。此操作立即生效且不可恢复。"
+}

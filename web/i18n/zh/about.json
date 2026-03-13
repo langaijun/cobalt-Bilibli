@@ -1,0 +1,33 @@
+{
+    "page.general": "什么是 Cobalt？",
+    "page.community": "社区与支持",
+    "page.privacy": "隐私政策",
+    "page.terms": "条款与使用规范",
+    "page.credits": "致谢与许可",
+
+    "heading.general": "一般条款",
+    "heading.licenses": "开源许可",
+    "heading.summary": "用最好的方式保存你喜欢的内容",
+    "heading.privacy_efficiency": "注重隐私与效率",
+    "heading.community": "开放社区",
+    "heading.local": "本地处理",
+    "heading.saving": "保存",
+    "heading.encryption": "加密",
+    "heading.plausible": "匿名访问统计",
+    "heading.cloudflare": "网页隐私与安全",
+    "heading.responsibility": "用户责任",
+    "heading.abuse": "举报滥用",
+    "heading.motivation": "初衷",
+    "heading.testers": "测试人员",
+    "heading.partners": "合作伙伴",
+
+    "support.github": "查看 Cobalt 源码、参与贡献或反馈问题",
+    "support.discord": "在 Discord 与社区和开发者交流或寻求帮助",
+    "support.twitter": "在 Twitter 关注 Cobalt 动态与开发进展",
+    "support.telegram": "通过 Telegram 频道获取 Cobalt 最新动态",
+    "support.bluesky": "在 Bluesky 关注 Cobalt 动态与开发进展",
+
+    "support.description.issue": "如需反馈 Bug 或重复出现的问题，请在 GitHub 提交。",
+    "support.description.help": "其他问题请使用 Discord，并在 #cobalt-support 中清楚描述问题，否则难以协助。",
+    "support.description.best-effort": "所有支持均为尽力而为，不保证回复时间。"
+}

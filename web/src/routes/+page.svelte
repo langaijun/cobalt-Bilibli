@@ -1,36 +1,39 @@
 <script>
-    import { t } from "$lib/i18n/translations";
-
-    import Omnibox from "$components/save/Omnibox.svelte";
-    import Meowbalt from "$components/misc/Meowbalt.svelte";
-    import SupportedServices from "$components/save/SupportedServices.svelte";
+    // 极简 B站下载器：仅保留输入框+下载+格式/质量+状态
+    import BilibiliSimple from "$components/save/BilibiliSimple.svelte";
+    // 原多平台版恢复时取消注释: Omnibox, Meowbalt, SupportedServices, $t("general.cobalt")
+    // import { t } from "$lib/i18n/translations";
+    // import Omnibox from "$components/save/Omnibox.svelte";
+    // import Meowbalt from "$components/misc/Meowbalt.svelte";
+    // import SupportedServices from "$components/save/SupportedServices.svelte";
 </script>
 
 <svelte:head>
-    <title>{$t("general.cobalt")}</title>
-    <meta property="og:title" content={$t("general.cobalt")} />
+    <title>B站下载器</title>
+    <meta property="og:title" content="B站下载器" />
 </svelte:head>
 
 <div id="cobalt-save-container" class="center-column-container">
-    <SupportedServices />
     <main
         id="cobalt-save"
         tabindex="-1"
         data-first-focus
     >
-        <Meowbalt emotion="smile" />
-        <Omnibox />
+        <!-- 原多平台版恢复时用 Meowbalt + Omnibox 替换 BilibiliSimple -->
+        <BilibiliSimple />
     </main>
-    <div id="terms-note">
-        {$t("save.terms.note.agreement")}
-        <a href="/about/terms">{$t("save.terms.note.link")}</a>
-    </div>
+    <!-- 原条款与支持平台，以后可恢复:
+    <div id="terms-note">... + SupportedServices </div>
+    -->
 </div>
 
 <style>
     #cobalt-save-container {
         padding: var(--padding);
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        min-height: 100%;
     }
 
     #cobalt-save {
@@ -39,7 +42,7 @@
         align-items: center;
         justify-content: center;
         width: 100%;
-        height: 100%;
+        flex: 1;
         gap: 15px;
     }
 

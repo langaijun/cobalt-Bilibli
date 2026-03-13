@@ -1,0 +1,11 @@
+{
+    "import.no_data": "该文件中没有可导入的设置，请确认是否选对文件。",
+    "import.invalid": "该文件不是有效的 Cobalt 设置，请确认是否选对文件。",
+    "import.unknown": "无法从文件加载数据，可能已损坏或格式错误。错误信息：\n\n{{ value }}",
+
+    "tunnel.probe": "无法测试隧道。可能是浏览器或网络配置阻止了与 Cobalt 服务器的连接，请检查是否有异常扩展。",
+
+    "captcha_too_long": "Cloudflare Turnstile 验证时间过长。可尝试：关闭异常扩展、更换网络、换浏览器或检查设备是否感染恶意软件。",
+
+    "pipeline.missing_response_data": "处理实例未返回必要的文件信息，无法创建本地处理流程。请稍后重试，若持续出现请反馈。"
+}

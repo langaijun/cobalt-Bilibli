@@ -1,0 +1,8 @@
+{
+    "bullet.purpose.title": "重封装有什么用？",
+    "bullet.purpose.description": "重封装可修复容器问题（如缺少时间信息），提高与旧版软件（如 Vegas Pro、Windows Media Player）的兼容性。",
+    "bullet.explainer.title": "原理是什么？",
+    "bullet.explainer.description": "重封装将现有编码数据复制到新的媒体容器中，过程无损，不会重新编码。",
+    "bullet.privacy.title": "本地处理",
+    "bullet.privacy.description": "Cobalt 在本地进行重封装，文件不会离开你的设备，处理几乎即时完成。"
+}
