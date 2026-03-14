@@ -9,18 +9,26 @@ COPY . /app
 RUN corepack enable
 RUN apk add --no-cache python3 alpine-sdk
 
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store \
-    pnpm install --prod --frozen-lockfile
+# 安装所有依赖（包括开发依赖）
+RUN pnpm install
 
-RUN pnpm deploy --filter=@imput/cobalt-api --prod /prod/api
+# 安装生产依赖（如果 lockfile 变了，重新生成）
+RUN pnpm install --prod --frozen-lockfile || pnpm install --prod
+
+# 部署 api 服务到 /prod/api
+RUN pnpm deploy --filter=“@imput/cobalt-api” --prod /prod/api
 
 FROM base AS api
 WORKDIR /app
 
-COPY --from=build --chown=node:node /prod/api /app
-COPY --from=build --chown=node:node /app/.git /app/.git
+# 复制部署好的 api 代码
+COPY --from=build --chown=1000:1000 /prod/api /app
 
-USER node
+# 可选：复制 .git 信息（用于版本展示）
+# COPY --from=build --chown=1000:1000 /app/.git /app/.git
+
+# 使用非 root 用户运行（node 镜像默认 uid 1000）
+USER 1000
 
 EXPOSE 9000
-CMD [ "node", "src/cobalt" ]
+CMD [ "node", "src/cobalt.js" ]  # 确认入口文件是 cobalt.js 还是 cobalt
