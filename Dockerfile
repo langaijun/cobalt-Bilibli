@@ -7,6 +7,10 @@ WORKDIR /app
 COPY . /app
 
 RUN corepack enable
+# ✅ 强制指定一个存在的 pnpm 版本（比如 v9.12.2，稳定版）
+RUN corepack install pnpm@9.12.2
+RUN pnpm --version  # 验证版本
+
 RUN apk add --no-cache python3 alpine-sdk
 
 # 安装依赖
@@ -33,6 +37,7 @@ USER 1000
 EXPOSE 9000
 # ✅ 修正入口文件路径：先确认 /prod/api 部署后的结构，通常入口是 index.js 或在根目录
 # 如果 /prod/api 里的入口是 /app/cobalt.js，就用：
-CMD [ "node", "cobalt.js" ]
-# 如果是 /app/src/cobalt.js，才用：
-# CMD [ "node", "src/cobalt.js" ]
+# 在 CMD 前添加这行，打印所有环境变量
+RUN echo "API_URL: $API_URL" && env
+CMD [ "node", "src/cobalt.js" ]
+
