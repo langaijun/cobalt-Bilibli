@@ -16,8 +16,8 @@ RUN pnpm install
 RUN pnpm install --prod --frozen-lockfile || pnpm install --prod
 
 # 部署 api 服务到 /prod/api
-RUN pnpm deploy --filter=“@imput/cobalt-api” --prod /prod/api
-
+#  RUN pnpm deploy --filter=“@imput/cobalt-api” --prod /prod/api
+RUN pnpm deploy --filter="./api" --prod /prod/api
 FROM base AS api
 WORKDIR /app
 
