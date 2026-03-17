@@ -26,9 +26,12 @@ COPY --from=build --chown=1000:1000 /prod/api /app
 
 # 可选：复制 .git 信息（用于版本展示）
 # COPY --from=build --chown=1000:1000 /app/.git /app/.git
+# 添加这行：复制 .git 目录
+COPY --from=build --chown=1000:1000 /app/.git /app/.git
 
 # 使用非 root 用户运行（node 镜像默认 uid 1000）
 USER 1000
 
 EXPOSE 9000
 CMD [ "node", "src/cobalt.js" ]  # 确认入口文件是 cobalt.js 还是 cobalt
+
