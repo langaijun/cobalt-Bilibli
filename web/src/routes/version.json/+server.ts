@@ -1,12 +1,15 @@
 import { json } from "@sveltejs/kit";
 import { getCommit, getBranch, getRemote, getVersion } from "@imput/version-info";
 
+const fallback = (p: Promise<string | undefined>) =>
+    p.catch(() => "");
+
 export async function GET() {
     return json({
-        commit: await getCommit(),
-        branch: await getBranch(),
-        remote: await getRemote(),
-        version: await getVersion()
+        commit: await fallback(getCommit()),
+        branch: await fallback(getBranch()),
+        remote: await fallback(getRemote()),
+        version: await fallback(getVersion())
     });
 }
 
