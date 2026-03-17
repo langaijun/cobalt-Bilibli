@@ -25,7 +25,7 @@ WORKDIR /app
 
 RUN ls -la /app/.git || echo ".git not found before copy"
 COPY --from=build --chown=1000:1000 /app/.git /app/.git
-RUN ls -la /app/.git || echo ".git not found after copy"
+
 # 复制部署好的 api 代码
 COPY --from=build --chown=1000:1000 /prod/api /app
 
