@@ -5,6 +5,7 @@ ENV PATH="$PNPM_HOME:$PATH"
 FROM base AS build
 WORKDIR /app
 COPY . /app
+#  COPY .git /app/.git  # 强制复制 .git 目录
 
 RUN corepack enable
 RUN apk add --no-cache python3 alpine-sdk
@@ -18,9 +19,13 @@ RUN pnpm install --prod --frozen-lockfile || pnpm install --prod
 # 部署 api 服务到 /prod/api
 #  RUN pnpm deploy --filter=“@imput/cobalt-api” --prod /prod/api
 RUN pnpm deploy --filter="./api" --prod /prod/api
+RUN ls -la /app/ && ls -la /app/.git || echo ".git not found in build"
 FROM base AS api
 WORKDIR /app
 
+RUN ls -la /app/.git || echo ".git not found before copy"
+COPY --from=build --chown=1000:1000 /app/.git /app/.git
+RUN ls -la /app/.git || echo ".git not found after copy"
 # 复制部署好的 api 代码
 COPY --from=build --chown=1000:1000 /prod/api /app
 
