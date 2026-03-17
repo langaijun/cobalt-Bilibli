@@ -5,38 +5,34 @@ ENV PATH="$PNPM_HOME:$PATH"
 FROM base AS build
 WORKDIR /app
 COPY . /app
-#  COPY .git /app/.git  # 强制复制 .git 目录
 
 RUN corepack enable
 RUN apk add --no-cache python3 alpine-sdk
 
-# 安装所有依赖（包括开发依赖）
+# 安装依赖
 RUN pnpm install
-
-# 安装生产依赖（如果 lockfile 变了，重新生成）
 RUN pnpm install --prod --frozen-lockfile || pnpm install --prod
 
-# 部署 api 服务到 /prod/api
-#  RUN pnpm deploy --filter=“@imput/cobalt-api” --prod /prod/api
+# 部署 api 到 /prod/api（保持不变）
 RUN pnpm deploy --filter="./api" --prod /prod/api
-RUN ls -la /app/ && ls -la /app/.git || echo ".git not found in build"
+
 FROM base AS api
 WORKDIR /app
-
-RUN ls -la /app/.git || echo ".git not found before copy"
-COPY --from=build --chown=1000:1000 /app/.git /app/.git
 
 # 复制部署好的 api 代码
 COPY --from=build --chown=1000:1000 /prod/api /app
 
-# 可选：复制 .git 信息（用于版本展示）
+# ✅ 删除冗余的 .git 复制行（之前已确认不需要）
+# RUN ls -la /app/.git || echo ".git not found before copy"
 # COPY --from=build --chown=1000:1000 /app/.git /app/.git
-# 添加这行：复制 .git 目录
-COPY --from=build --chown=1000:1000 /app/.git /app/.git
+# 重复的 COPY .git 也一并删掉
 
-# 使用非 root 用户运行（node 镜像默认 uid 1000）
+# 使用非 root 用户
 USER 1000
 
 EXPOSE 9000
-CMD [ "node", "src/cobalt.js" ]  # 确认入口文件是 cobalt.js 还是 cobalt
-
+# ✅ 修正入口文件路径：先确认 /prod/api 部署后的结构，通常入口是 index.js 或在根目录
+# 如果 /prod/api 里的入口是 /app/cobalt.js，就用：
+CMD [ "node", "cobalt.js" ]
+# 如果是 /app/src/cobalt.js，才用：
+# CMD [ "node", "src/cobalt.js" ]
