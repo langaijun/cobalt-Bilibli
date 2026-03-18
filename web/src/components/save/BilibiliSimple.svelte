@@ -10,6 +10,7 @@
     import { turnstileEnabled, turnstileSolved } from "$lib/state/turnstile";
     import dialogs from "$lib/state/dialogs";
     import { saveView } from "$lib/state/save-view";
+    import { currentApiURL } from "$lib/api/api-url";
 
     import type { Optional } from "$lib/types/generic";
 
@@ -149,8 +150,8 @@
         favlistError = "";
         favlistLoading = true;
         try {
-            const base = typeof window !== "undefined" ? window.location.origin : "";
-            const res = await fetch(`${base}/api/bilibili-favlist?url=${encodeURIComponent(u)}`);
+            const apiBase = typeof window !== "undefined" ? currentApiURL() : "";
+            const res = await fetch(`${apiBase}/api/bilibili-favlist?url=${encodeURIComponent(u)}`);
             const data = await res.json().catch(() => ({}));
             if (!res.ok) {
                 favlistError = data.error || "解析失败";

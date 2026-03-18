@@ -19,6 +19,7 @@ import { friendlyServiceName } from "../processing/service-alias.js";
 import { verifyStream } from "../stream/manage.js";
 import { createResponse, normalizeRequest, getIP } from "../processing/request.js";
 import { setupTunnelHandler } from "./itunnel.js";
+import { handleBilibiliFavlist } from "./bilibili-favlist.js";
 
 import * as APIKeys from "../security/api-keys.js";
 import * as Cookies from "../processing/cookie/manager.js";
@@ -324,6 +325,13 @@ export const runAPI = async (express, app, __dirname, isPrimary = true) => {
     app.get('/favicon.ico', (req, res) => {
         res.status(404).end();
     })
+
+    app.get('/api/bilibili-favlist', (req, res) => {
+        handleBilibiliFavlist(req, res).catch((err) => {
+            console.error('[bilibili-favlist]', err);
+            return fail(res, "error.api.generic");
+        });
+    });
 
     app.get('/*', (req, res) => {
         res.redirect('/');
