@@ -59,8 +59,10 @@ export const loadEnvs = (env = process.env) => {
         }
     }
 
+    // Railway 自动注入 RAILWAY_PUBLIC_DOMAIN；若未配置 API_URL 则用其拼出 API 地址
+    const railwayFallback = env.RAILWAY_PUBLIC_DOMAIN && `https://${env.RAILWAY_PUBLIC_DOMAIN}/`;
     return {
-        apiURL: env.API_URL || '',
+        apiURL: env.API_URL || railwayFallback || '',
         apiPort: env.API_PORT || 9000,
         tunnelPort: env.API_PORT || 9000,
 
