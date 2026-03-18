@@ -67,6 +67,35 @@ export const openURL = (url: string) => {
     }
 }
 
+/** 从 Content-Disposition 头解析文件名 */
+function filenameFromContentDisposition(header: string | null): string | undefined {
+    if (!header) return undefined;
+    const m = header.match(/filename\*?=(?:UTF-8'')?["']?([^"'\s;]+)["']?/i) || header.match(/filename=["']?([^"'\s;]+)["']?/i);
+    return m ? decodeURIComponent(m[1].trim()) : undefined;
+}
+
+/**
+ * 通过 fetch 拉取 URL 为 blob 并用 <a download> 触发下载，不依赖 window.open，批量/延迟场景下不会触发弹窗拦截。
+ * 用于 tunnel 等跨域直链，避免「选择保存方式」弹窗。
+ */
+export function downloadUrlAsBlob(url: string, suggestedFilename?: string): Promise<void> {
+    return fetch(url, { mode: "cors", credentials: "omit" })
+        .then((res) => {
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const disposition = res.headers.get("Content-Disposition");
+            const name = filenameFromContentDisposition(disposition) || suggestedFilename || "download";
+            return res.blob().then((blob) => ({ blob, name }));
+        })
+        .then(({ blob, name }) => {
+            const blobUrl = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = blobUrl;
+            a.download = name;
+            a.click();
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 30_000);
+        });
+}
+
 export const shareURL = async (url: string) => {
     return await navigator?.share({ url });
 }
@@ -82,6 +111,19 @@ export const downloadFile = ({ url, file, urlType }: DownloadFileParams) => {
 
     if (pref === "ask") {
         return openSavingDialog({ url, file, urlType });
+    }
+
+    /* tunnel 直链用 fetch+blob 触发下载，不依赖 window.open，批量下载时不会因无用户手势而弹「选择保存方式」 */
+    const isTunnel = url?.includes("/tunnel");
+    if (url && pref === "download" && isTunnel) {
+        downloadUrlAsBlob(url).catch(() => {
+            openSavingDialog({
+                url,
+                urlType,
+                body: get(t)("dialog.saving.timeout"),
+            });
+        });
+        return;
     }
 
     /*
