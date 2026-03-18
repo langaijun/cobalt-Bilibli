@@ -91,6 +91,9 @@
         }
     }
 
+    const BATCH_MAX = 100;
+    const BATCH_PAGE_SIZE = 25;
+
     /** 从多行文本里解析出有效链接（每行一个，支持从收藏夹复制的一整段） */
     function parseBatchUrls(text: string): string[] {
         const lines = text.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
@@ -102,8 +105,28 @@
         return [...new Set(urls)].filter(validLink);
     }
 
+    /** 解析后的全部链接 */
+    let batchUrlList = $derived(parseBatchUrls(batchLinks));
+    /** 仅取前 100 条，用于展示与下载 */
+    let batchUrlListCapped = $derived(batchUrlList.slice(0, BATCH_MAX));
+    /** 分页：当前页（1-based） */
+    let batchCurrentPage = $state(1);
+    /** 总页数（每页 25 条） */
+    let batchPageCount = $derived(Math.max(1, Math.ceil(batchUrlListCapped.length / BATCH_PAGE_SIZE)));
+    /** 当前页的链接 */
+    let batchPageUrls = $derived(
+        batchUrlListCapped.slice(
+            (batchCurrentPage - 1) * BATCH_PAGE_SIZE,
+            batchCurrentPage * BATCH_PAGE_SIZE
+        )
+    );
+
+    $effect(() => {
+        if (batchCurrentPage > batchPageCount) batchCurrentPage = Math.max(1, batchPageCount);
+    });
+
     async function doBatchDownload() {
-        const urls = parseBatchUrls(batchLinks);
+        const urls = batchUrlListCapped;
         if (urls.length === 0 || batchInProgress || $dialogs.length > 0) return;
         hapticSwitch();
         batchInProgress = true;
@@ -134,7 +157,8 @@
                 return;
             }
             if (data.urls?.length) {
-                batchLinks = data.urls.join("\n");
+                const urls = data.urls.slice(0, BATCH_MAX);
+                batchLinks = urls.join("\n");
                 saveView.set("batch");
                 await tick();
                 batchAreaEl?.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -149,7 +173,7 @@
     }
 
     let isBatchDisabled = $derived(
-        batchInProgress || isDisabled || parseBatchUrls(batchLinks).length === 0
+        batchInProgress || isDisabled || batchUrlListCapped.length === 0
     );
 
     const statusText = $derived.by(() => {
@@ -262,9 +286,9 @@
             </div>
         </div>
     {:else if $saveView === "batch"}
-        <!-- 批量下载 -->
+        <!-- 批量下载：最多 100 条，分页每页 25 条 -->
         <div class="download-block" bind:this={batchAreaEl}>
-            <label for="batch-links" class="batch-label">多链接（收藏夹等）：每行一个链接</label>
+            <label for="batch-links" class="batch-label">多链接（收藏夹等）：每行一个链接，最多处理 100 条</label>
             <textarea
                 id="batch-links"
                 bind:value={batchLinks}
@@ -274,6 +298,53 @@
                 disabled={batchInProgress || isDisabled}
                 aria-label="多链接输入，每行一个"
             />
+            {#if batchUrlList.length > BATCH_MAX}
+                <p class="batch-hint" role="status">已取前 {BATCH_MAX} 条，共 {batchUrlList.length} 条，仅处理前 {BATCH_MAX} 条</p>
+            {/if}
+            {#if batchUrlListCapped.length > 0}
+                <div class="batch-list-section">
+                    <p class="batch-list-title">链接列表（共 {batchUrlListCapped.length} 条，每页 {BATCH_PAGE_SIZE} 条）</p>
+                    <ul class="batch-list" aria-label="当前页链接">
+                        {#each batchPageUrls as url, i}
+                            <li class="batch-list-item">{(batchCurrentPage - 1) * BATCH_PAGE_SIZE + i + 1}. {url}</li>
+                        {/each}
+                    </ul>
+                    <div class="batch-pagination">
+                        <button
+                            type="button"
+                            class="batch-page-btn"
+                            disabled={batchCurrentPage <= 1}
+                            onclick={() => { hapticSwitch(); batchCurrentPage -= 1; }}
+                            aria-label="上一页"
+                        >
+                            上一页
+                        </button>
+                        <span class="batch-page-nums">
+                            {#each Array.from({ length: batchPageCount }, (_, i) => i + 1) as p}
+                                <button
+                                    type="button"
+                                    class="batch-page-num"
+                                    class:active={p === batchCurrentPage}
+                                    onclick={() => { hapticSwitch(); batchCurrentPage = p; }}
+                                    aria-label="第 {p} 页"
+                                    aria-current={p === batchCurrentPage ? "page" : undefined}
+                                >
+                                    {p}
+                                </button>
+                            {/each}
+                        </span>
+                        <button
+                            type="button"
+                            class="batch-page-btn"
+                            disabled={batchCurrentPage >= batchPageCount}
+                            onclick={() => { hapticSwitch(); batchCurrentPage += 1; }}
+                            aria-label="下一页"
+                        >
+                            下一页
+                        </button>
+                    </div>
+                </div>
+            {/if}
             <button
                 type="button"
                 class="batch-btn"
@@ -281,7 +352,7 @@
                 onclick={doBatchDownload}
                 aria-label="批量下载"
             >
-                批量下载（{parseBatchUrls(batchLinks).length} 个）
+                批量下载（{batchUrlListCapped.length} 个）
             </button>
             <div class="options">
                 <div class="option-row">
@@ -519,6 +590,98 @@
     .batch-btn:disabled {
         opacity: 0.5;
         cursor: not-allowed;
+    }
+
+    .batch-hint {
+        margin: 0;
+        font-size: 13px;
+        color: var(--bilibili-blue);
+    }
+
+    .batch-list-section {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .batch-list-title {
+        margin: 0;
+        font-size: 13px;
+        color: var(--bilibili-blue);
+    }
+
+    .batch-list {
+        margin: 0;
+        padding: 8px 12px;
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1.5px solid var(--input-border);
+        border-radius: var(--border-radius);
+        background: var(--primary);
+        list-style: none;
+        font-size: 12px;
+        color: var(--bilibili-blue);
+        line-height: 1.5;
+    }
+
+    .batch-list-item {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .batch-pagination {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+
+    .batch-page-btn {
+        padding: 6px 12px;
+        font-size: 13px;
+        color: var(--bilibili-blue);
+        background: var(--primary);
+        border: 1.5px solid var(--input-border);
+        border-radius: var(--border-radius);
+        cursor: pointer;
+    }
+
+    .batch-page-btn:hover:not(:disabled) {
+        border-color: var(--bilibili-blue);
+        background: var(--button-hover-transparent);
+    }
+
+    .batch-page-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .batch-page-nums {
+        display: flex;
+        gap: 4px;
+    }
+
+    .batch-page-num {
+        min-width: 28px;
+        padding: 6px 8px;
+        font-size: 13px;
+        color: var(--bilibili-blue);
+        background: var(--primary);
+        border: 1.5px solid var(--input-border);
+        border-radius: var(--border-radius);
+        cursor: pointer;
+    }
+
+    .batch-page-num:hover {
+        border-color: var(--bilibili-blue);
+    }
+
+    .batch-page-num.active {
+        background: var(--bilibili-blue);
+        color: #fff;
+        border-color: var(--bilibili-blue);
     }
 
     .options {
