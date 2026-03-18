@@ -1,6 +1,22 @@
 import LibAVWrapper from "$lib/libav";
 import type { FileInfo } from "$lib/types/libav";
 
+const PROBE_TIMEOUT_MS = 30_000;
+
+const withTimeout = async <T>(p: Promise<T>, ms: number, code: string): Promise<T> => {
+    let t: ReturnType<typeof setTimeout> | undefined;
+    try {
+        return await Promise.race([
+            p,
+            new Promise<T>((_, reject) => {
+                t = setTimeout(() => reject(new Error(code)), ms);
+            })
+        ]);
+    } finally {
+        if (t) clearTimeout(t);
+    }
+}
+
 const ffmpeg = async (
     variant: string,
     files: File[],
@@ -52,9 +68,14 @@ const ffmpeg = async (
         let file_info;
 
         try {
-            file_info = await ff.probe(probeFile);
+            file_info = await withTimeout(ff.probe(probeFile), PROBE_TIMEOUT_MS, "queue.ffmpeg.probe_timeout");
         } catch (e) {
             console.error("error from ffmpeg worker @ file_info:");
+            if (e instanceof Error && e.message === "queue.ffmpeg.probe_timeout") {
+                console.error(e);
+                error("queue.ffmpeg.probe_timeout");
+                return self.close();
+            }
             if (e instanceof Error && e?.message?.toLowerCase().includes("out of memory")) {
                 console.error(e);
 
@@ -128,6 +149,10 @@ const ffmpeg = async (
 self.onmessage = async (event: MessageEvent) => {
     const ed = event.data.cobaltFFmpegWorker;
     if (ed?.variant && ed?.files && ed?.args && ed?.output) {
+        // 先回一个 ready，避免主线程误判 “worker 没启动”
+        self.postMessage({
+            cobaltFFmpegWorker: { ready: true }
+        });
         await ffmpeg(ed.variant, ed.files, ed.args, ed.output, ed.yesthreads);
     }
 }
