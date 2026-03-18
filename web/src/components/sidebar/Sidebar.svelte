@@ -6,9 +6,12 @@
 
     import CobaltLogo from "$components/sidebar/CobaltLogo.svelte";
     import SidebarTab from "$components/sidebar/SidebarTab.svelte";
+    import SaveViewTab from "$components/sidebar/SaveViewTab.svelte";
 
     import IconDownload from "@tabler/icons-svelte/IconDownload.svelte";
     import IconSettings from "@tabler/icons-svelte/IconSettings.svelte";
+    import IconFolder from "@tabler/icons-svelte/IconFolder.svelte";
+    import IconListNumbers from "@tabler/icons-svelte/IconListNumbers.svelte";
 
     import IconRepeat from "@tabler/icons-svelte/IconRepeat.svelte";
 
@@ -31,7 +34,9 @@
     <CobaltLogo />
     <div id="sidebar-tabs" role="tablist">
         <div id="sidebar-actions" class="sidebar-inner-container">
-            <SidebarTab name="save" path="/" icon={IconDownload} />
+            <SaveViewTab view="single" label="下载" icon={IconDownload} />
+            <SaveViewTab view="favlist" label="从收藏夹下载" icon={IconFolder} />
+            <SaveViewTab view="batch" label="批量下载" icon={IconListNumbers} />
             {#if false}
                 <!-- 极简版：仅保留下载。恢复多标签时改为 true 或删除此 if -->
                 {#if !$settings.appearance.hideRemuxTab}

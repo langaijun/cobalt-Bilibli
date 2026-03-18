@@ -9,6 +9,7 @@
     import settings from "$lib/state/settings";
     import { turnstileEnabled, turnstileSolved } from "$lib/state/turnstile";
     import dialogs from "$lib/state/dialogs";
+    import { saveView } from "$lib/state/save-view";
 
     import type { Optional } from "$lib/types/generic";
 
@@ -23,9 +24,6 @@
     let favlistUrl = $state("");
     let favlistLoading = $state(false);
     let favlistError = $state("");
-    /** 折叠：从收藏夹下载 / 批量下载 */
-    let showFavlist = $state(false);
-    let showBatch = $state(false);
     let batchAreaEl: HTMLElement | null = null;
 
     const validLink = (url: string) => {
@@ -137,7 +135,7 @@
             }
             if (data.urls?.length) {
                 batchLinks = data.urls.join("\n");
-                showBatch = true;
+                saveView.set("batch");
                 await tick();
                 batchAreaEl?.scrollIntoView({ behavior: "smooth", block: "nearest" });
             } else {
@@ -169,8 +167,8 @@
 <div class="bilibili-simple">
     <h1 class="title">B站下载器</h1>
 
-    <!-- 单链接：输入行 + 下载按钮，下载按钮下为两个折叠入口 -->
-    <div class="top-row">
+    {#if $saveView === "single"}
+        <!-- 单链接下载：输入行 + 下载按钮 -->
         <div class="input-row">
             <input
                 bind:this={linkInput}
@@ -196,72 +194,36 @@
                 下载
             </button>
         </div>
-        <div class="toggle-buttons">
-            <button
-                type="button"
-                class="toggle-btn"
-                class:expanded={showFavlist}
-                onclick={() => { hapticSwitch(); showFavlist = !showFavlist; }}
-                aria-expanded={showFavlist}
-                aria-label="从收藏夹下载"
-            >
-                从收藏夹下载
-            </button>
-            <button
-                type="button"
-                class="toggle-btn"
-                class:expanded={showBatch}
-                onclick={() => { hapticSwitch(); showBatch = !showBatch; }}
-                aria-expanded={showBatch}
-                aria-label="批量下载"
-            >
-                批量下载
-            </button>
-        </div>
-    </div>
-
-    <p class="paste-hint">
-        <button type="button" class="paste-link" onclick={pasteClipboard} title="从剪贴板读取链接并填入输入框">粘贴链接</button>
-        <span class="paste-desc">（从剪贴板粘贴，部分浏览器需点击后授权）</span>
-    </p>
-
-    {#if pasteError}
-        <p class="paste-error" role="alert">{pasteError}</p>
-    {/if}
-
-    <!-- 一、单链接下载：视频/音频选项 -->
-    <div class="download-block">
-        <div class="options">
-            <div class="option-row">
-                <button type="button" class="option-label-btn" class:active={format === "video"} onclick={() => { setFormat("video"); setVideoQuality("720"); }}>
-                    视频 MP4：
-                </button>
-                <div class="segmented">
-                    {#each videoQualities as q}
-                        <button type="button" class="segmented-btn small" class:active={format === "video" && videoQuality === q} onclick={() => { setFormat("video"); setVideoQuality(q); }}>
-                            {q === "1080" ? "1080P" : q === "720" ? "720P" : "480P"}
-                        </button>
-                    {/each}
+        <p class="paste-hint">
+            <button type="button" class="paste-link" onclick={pasteClipboard} title="从剪贴板读取链接并填入输入框">粘贴链接</button>
+            <span class="paste-desc">（从剪贴板粘贴，部分浏览器需点击后授权）</span>
+        </p>
+        {#if pasteError}
+            <p class="paste-error" role="alert">{pasteError}</p>
+        {/if}
+        <div class="download-block">
+            <div class="options">
+                <div class="option-row">
+                    <button type="button" class="option-label-btn" class:active={format === "video"} onclick={() => { setFormat("video"); setVideoQuality("720"); }}>视频 MP4：</button>
+                    <div class="segmented">
+                        {#each videoQualities as q}
+                            <button type="button" class="segmented-btn small" class:active={format === "video" && videoQuality === q} onclick={() => { setFormat("video"); setVideoQuality(q); }}>{q === "1080" ? "1080P" : q === "720" ? "720P" : "480P"}</button>
+                        {/each}
+                    </div>
                 </div>
-            </div>
-            <div class="option-row">
-                <button type="button" class="option-label-btn" class:active={format === "audio"} onclick={() => { setFormat("audio"); setAudioBitrate("128"); }}>
-                    音频 MP3：
-                </button>
-                <div class="segmented">
-                    {#each audioBitrates as b}
-                        <button type="button" class="segmented-btn small" class:active={format === "audio" && audioBitrate === b} onclick={() => { setFormat("audio"); setAudioBitrate(b); }}>
-                            {b}kbps
-                        </button>
-                    {/each}
+                <div class="option-row">
+                    <button type="button" class="option-label-btn" class:active={format === "audio"} onclick={() => { setFormat("audio"); setAudioBitrate("128"); }}>音频 MP3：</button>
+                    <div class="segmented">
+                        {#each audioBitrates as b}
+                            <button type="button" class="segmented-btn small" class:active={format === "audio" && audioBitrate === b} onclick={() => { setFormat("audio"); setAudioBitrate(b); }}>{b}kbps</button>
+                        {/each}
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-
-    <!-- 二、从收藏夹下载（折叠） -->
-    {#if showFavlist}
-        <div class="download-block collapsible">
+    {:else if $saveView === "favlist"}
+        <!-- 从收藏夹下载 -->
+        <div class="download-block">
             <label for="favlist-url" class="batch-label">收藏夹链接（一键解析）</label>
             <div class="favlist-input-row">
                 <input
@@ -299,11 +261,9 @@
                 </div>
             </div>
         </div>
-    {/if}
-
-    <!-- 三、批量下载（折叠） -->
-    {#if showBatch}
-        <div class="download-block collapsible" bind:this={batchAreaEl}>
+    {:else if $saveView === "batch"}
+        <!-- 批量下载 -->
+        <div class="download-block" bind:this={batchAreaEl}>
             <label for="batch-links" class="batch-label">多链接（收藏夹等）：每行一个链接</label>
             <textarea
                 id="batch-links"
@@ -370,15 +330,8 @@
         margin: 0 0 0.5rem 0;
     }
 
-    .top-row {
-        display: flex;
-        width: 100%;
-        gap: 1rem;
-        align-items: flex-start;
-    }
-
     .input-row {
-        flex: 1;
+        width: 100%;
         display: flex;
         gap: 0;
         border-radius: var(--border-radius);
@@ -425,35 +378,6 @@
         opacity: 0.5;
     }
 
-    .toggle-buttons {
-        display: flex;
-        flex-direction: column;
-        gap: 0.5rem;
-        flex-shrink: 0;
-    }
-
-    .toggle-btn {
-        padding: 10px 14px;
-        font-size: 13px;
-        color: var(--bilibili-blue);
-        background: var(--primary);
-        border: 1.5px solid var(--input-border);
-        border-radius: var(--border-radius);
-        cursor: pointer;
-        white-space: nowrap;
-    }
-
-    .toggle-btn:hover {
-        border-color: var(--bilibili-blue);
-        background: var(--button-hover-transparent);
-    }
-
-    .toggle-btn.expanded {
-        background: var(--bilibili-blue);
-        color: #fff;
-        border-color: var(--bilibili-blue);
-    }
-
     .paste-link {
         align-self: flex-start;
         font-size: 13px;
@@ -496,9 +420,6 @@
         gap: 0.5rem;
     }
 
-    .download-block.collapsible {
-        margin-top: 0.25rem;
-    }
 
     .favlist-row {
         display: flex;
@@ -679,19 +600,6 @@
     @media screen and (max-width: 535px) {
         .title {
             font-size: 1.25rem;
-        }
-
-        .top-row {
-            flex-direction: column;
-        }
-
-        .toggle-buttons {
-            flex-direction: row;
-            width: 100%;
-        }
-
-        .toggle-btn {
-            flex: 1;
         }
 
         .input-row {
