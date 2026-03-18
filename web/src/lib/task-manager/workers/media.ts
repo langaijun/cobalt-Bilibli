@@ -1,7 +1,8 @@
 import LibAVWrapper from "$lib/libav";
 import type { FileInfo } from "$lib/types/libav";
 
-const PROBE_TIMEOUT_MS = 30_000;
+// probe（ffprobe）在部分浏览器/机器上可能非常慢，过短会导致误判失败
+const PROBE_TIMEOUT_MS = 120_000;
 /** 重新封装/转码阶段最大等待时间，避免无限卡住 */
 const RENDER_TIMEOUT_MS = 5 * 60 * 1000; // 5 分钟
 
@@ -60,6 +61,16 @@ const ffmpeg = async (
         ff.terminate();
     }
 
+    const debug = (data: Record<string, unknown>) => {
+        try {
+            self.postMessage({
+                cobaltFFmpegWorker: {
+                    debug: data
+                }
+            });
+        } catch {}
+    };
+
     try {
         // probing just the first file in files array (usually audio) for duration progress
         const probeFile = files[0];
@@ -67,7 +78,7 @@ const ffmpeg = async (
             return error("queue.ffmpeg.probe_failed");
         }
 
-        let file_info;
+        let file_info: any;
 
         try {
             file_info = await withTimeout(ff.probe(probeFile), PROBE_TIMEOUT_MS, "queue.ffmpeg.probe_timeout");
@@ -75,8 +86,15 @@ const ffmpeg = async (
             console.error("error from ffmpeg worker @ file_info:");
             if (e instanceof Error && e.message === "queue.ffmpeg.probe_timeout") {
                 console.error(e);
-                error("queue.ffmpeg.probe_timeout");
-                return self.close();
+                // 关键目标是“先能下载”。probe 超时不一定意味着后续 render 不能工作。
+                // 跳过 probe：不给 duration 进度，但继续进行 remux/encode。
+                debug({
+                    stage: "probe_timeout_continue",
+                    timeoutMs: PROBE_TIMEOUT_MS,
+                    probeFileSize: probeFile.size,
+                    probeFileType: probeFile.type
+                });
+                file_info = { format: { duration: 0 }, streams: [] };
             }
             if (e instanceof Error && e?.message?.toLowerCase().includes("out of memory")) {
                 console.error(e);
