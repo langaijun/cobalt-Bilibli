@@ -36,6 +36,8 @@ export const startWorker = async ({ worker, workerId, dependsOn, parentId, worke
             }
 
             if (files.length > 0 && workerArgs.ffargs && workerArgs.output) {
+                // 临时关闭多线程：避免 .thr 在 Worker 内因 SAB/线程初始化挂起导致一直「开始转码」
+                const useThreads = false; // device.supports.multithreading;
                 await runFFmpegWorker(
                     workerId,
                     parentId,
@@ -43,7 +45,7 @@ export const startWorker = async ({ worker, workerId, dependsOn, parentId, worke
                     workerArgs.ffargs,
                     workerArgs.output,
                     worker,
-                    device.supports.multithreading,
+                    useThreads,
                     /*resetStartCounter=*/true,
                 );
             } else {

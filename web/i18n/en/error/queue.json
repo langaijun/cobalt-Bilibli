@@ -1,6 +1,7 @@
 {
     "no_final_file": "no final file output",
     "worker_didnt_start": "couldn't start a processing worker (try disabling ad blocker or whitelist this site)",
+    "worker_script_load_failed": "transcode script failed to load (try disabling ad blocker, incognito, or another browser)",
 
     "generic_error": "processing worker crashed (try disabling ad blocker or whitelist this site), see console for details",
 

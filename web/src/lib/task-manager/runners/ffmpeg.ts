@@ -32,7 +32,13 @@ export const runFFmpegWorker = async (
         await new Promise((r) => setTimeout(r, DELAY_BEFORE_RETRY_MS));
     }
 
-    const worker = new MediaWorker();
+    let worker: InstanceType<typeof MediaWorker>;
+    try {
+        worker = new MediaWorker();
+    } catch (e) {
+        console.error("Worker 脚本加载失败（可能被拦截）:", e);
+        return itemError(parentId, workerId, "queue.worker_script_load_failed");
+    }
 
     // unsubscribe 必须在 setInterval 之前声明，否则回调里会触发 "Cannot access before initialization"
     let unsubscribe: () => void = () => {};

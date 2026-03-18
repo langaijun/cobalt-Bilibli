@@ -1,6 +1,7 @@
 {
     "no_final_file": "未生成最终文件",
     "worker_didnt_start": "无法启动处理 Worker（请尝试关闭广告拦截扩展或将本站加入白名单）",
+    "worker_script_load_failed": "转码脚本加载失败（请关闭广告拦截、用无痕模式或换浏览器重试）",
 
     "generic_error": "处理 Worker 崩溃（请尝试关闭广告拦截扩展或将本站加入白名单），详见控制台",
 
