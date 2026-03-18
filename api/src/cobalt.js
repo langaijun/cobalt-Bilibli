@@ -36,10 +36,12 @@ async function startServer() {
 
         runAPI(express, app, __dirname, cluster.isPrimary);
 
-        // ✅ 修复：只保留一次 app.listen()，放在逻辑执行完后
-        app.listen(PORT, HOST, () => {
-            console.log(`Server running on http://${HOST}:${PORT}`);
-        });
+        // 集群模式下仅 worker 监听端口，主进程不 listen，避免 EADDRINUSE
+        if (!isCluster || !cluster.isPrimary) {
+            app.listen(PORT, HOST, () => {
+                console.log(`Server running on http://${HOST}:${PORT}`);
+            });
+        }
     } else {
         console.log(
             Red("API_URL env variable is missing, cobalt api can't start.")
