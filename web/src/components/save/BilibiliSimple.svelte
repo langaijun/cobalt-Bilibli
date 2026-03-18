@@ -14,6 +14,15 @@
 
     let linkInput: Optional<HTMLInputElement>;
     let pasteError = $state("");
+    /** 批量：多行链接（每行一个） */
+    let batchLinks = $state("");
+    let batchInProgress = $state(false);
+    let batchCurrent = $state(0);
+    let batchTotal = $state(0);
+    /** 收藏夹链接（space.bilibili.com/xxx/favlist?fid=xxx） */
+    let favlistUrl = $state("");
+    let favlistLoading = $state(false);
+    let favlistError = $state("");
 
     const validLink = (url: string) => {
         try {
@@ -80,7 +89,67 @@
         }
     }
 
+    /** 从多行文本里解析出有效链接（每行一个，支持从收藏夹复制的一整段） */
+    function parseBatchUrls(text: string): string[] {
+        const lines = text.split(/\r?\n/).map((s) => s.trim()).filter(Boolean);
+        const urls: string[] = [];
+        for (const line of lines) {
+            const match = line.match(/https?\:\/\/[^\s]+/g);
+            if (match) match.forEach((u) => urls.push(u.split("，")[0]));
+        }
+        return [...new Set(urls)].filter(validLink);
+    }
+
+    async function doBatchDownload() {
+        const urls = parseBatchUrls(batchLinks);
+        if (urls.length === 0 || batchInProgress || $dialogs.length > 0) return;
+        hapticSwitch();
+        batchInProgress = true;
+        batchTotal = urls.length;
+        batchCurrent = 0;
+        for (let i = 0; i < urls.length; i++) {
+            batchCurrent = i + 1;
+            await savingHandler({ url: urls[i] });
+            if (i < urls.length - 1) await new Promise((r) => setTimeout(r, 400));
+        }
+        batchInProgress = false;
+        batchCurrent = 0;
+        batchTotal = 0;
+    }
+
+    async function parseFavlist() {
+        const u = favlistUrl.trim();
+        if (!u || favlistLoading) return;
+        hapticSwitch();
+        favlistError = "";
+        favlistLoading = true;
+        try {
+            const base = typeof window !== "undefined" ? window.location.origin : "";
+            const res = await fetch(`${base}/api/bilibili-favlist?url=${encodeURIComponent(u)}`);
+            const data = await res.json().catch(() => ({}));
+            if (!res.ok) {
+                favlistError = data.error || "解析失败";
+                return;
+            }
+            if (data.urls?.length) {
+                batchLinks = data.urls.join("\n");
+            } else {
+                favlistError = "未获取到视频链接";
+            }
+        } catch {
+            favlistError = "网络请求失败";
+        } finally {
+            favlistLoading = false;
+        }
+    }
+
+    let isBatchDisabled = $derived(
+        batchInProgress || isDisabled || parseBatchUrls(batchLinks).length === 0
+    );
+
     const statusText = $derived.by(() => {
+        if (batchInProgress && batchTotal > 0)
+            return `批量添加中 ${batchCurrent}/${batchTotal}…`;
         const s = $downloadButtonState;
         if (s === "idle") return "就绪";
         if (s === "think" || s === "check") return "处理中…";
@@ -127,6 +196,54 @@
     {#if pasteError}
         <p class="paste-error" role="alert">{pasteError}</p>
     {/if}
+
+    <div class="batch-section">
+        <div class="favlist-row">
+            <label for="favlist-url" class="batch-label">收藏夹链接（一键解析）</label>
+            <div class="favlist-input-row">
+                <input
+                    id="favlist-url"
+                    type="text"
+                    class="favlist-input"
+                    bind:value={favlistUrl}
+                    placeholder="https://space.bilibili.com/xxx/favlist?fid=xxx"
+                    disabled={favlistLoading}
+                    aria-label="收藏夹页面链接"
+                />
+                <button
+                    type="button"
+                    class="favlist-btn"
+                    disabled={!favlistUrl.trim() || favlistLoading}
+                    onclick={parseFavlist}
+                    aria-label="解析收藏夹"
+                >
+                    {favlistLoading ? "解析中…" : "解析收藏夹"}
+                </button>
+            </div>
+            {#if favlistError}
+                <p class="paste-error" role="alert">{favlistError}</p>
+            {/if}
+        </div>
+        <label for="batch-links" class="batch-label">多链接（收藏夹等）：每行一个链接</label>
+        <textarea
+            id="batch-links"
+            bind:value={batchLinks}
+            class="batch-textarea"
+            placeholder="https://www.bilibili.com/video/BVxxx&#10;https://www.bilibili.com/video/BVyyy"
+            rows="4"
+            disabled={batchInProgress || isDisabled}
+            aria-label="多链接输入，每行一个"
+        />
+        <button
+            type="button"
+            class="batch-btn"
+            disabled={isBatchDisabled}
+            onclick={doBatchDownload}
+            aria-label="批量下载"
+        >
+            批量下载（{parseBatchUrls(batchLinks).length} 个）
+        </button>
+    </div>
 
     <div class="options">
         <!-- 第一行：点「视频 MP4」即选视频+默认720P；右侧可改画质 -->
@@ -284,6 +401,113 @@
         margin: 0;
         font-size: 13px;
         color: var(--bilibili-blue);
+    }
+
+    .batch-section {
+        width: 100%;
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+
+    .favlist-row {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .favlist-input-row {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+
+    .favlist-input {
+        flex: 1;
+        padding: 10px 12px;
+        font-size: 14px;
+        border: 1.5px solid var(--input-border);
+        border-radius: var(--border-radius);
+        background: var(--primary);
+        color: var(--bilibili-blue);
+    }
+
+    .favlist-input:focus {
+        outline: none;
+        border-color: var(--bilibili-blue);
+    }
+
+    .favlist-input::placeholder {
+        color: var(--gray);
+    }
+
+    .favlist-btn {
+        padding: 10px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        background: var(--bilibili-blue);
+        color: #fff;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .favlist-btn:hover:not(:disabled) {
+        background: var(--bilibili-blue-dark);
+    }
+
+    .favlist-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    .batch-label {
+        font-size: 13px;
+        color: var(--bilibili-blue);
+    }
+
+    .batch-textarea {
+        width: 100%;
+        padding: 10px 12px;
+        font-size: 14px;
+        line-height: 1.4;
+        border: 1.5px solid var(--input-border);
+        border-radius: var(--border-radius);
+        background: var(--primary);
+        color: var(--bilibili-blue);
+        resize: vertical;
+        min-height: 80px;
+    }
+
+    .batch-textarea:focus {
+        outline: none;
+        border-color: var(--bilibili-blue);
+    }
+
+    .batch-textarea::placeholder {
+        color: var(--gray);
+    }
+
+    .batch-btn {
+        align-self: flex-start;
+        padding: 10px 18px;
+        font-size: 14px;
+        font-weight: 600;
+        background: var(--bilibili-blue);
+        color: #fff;
+        border: none;
+        border-radius: var(--border-radius);
+        cursor: pointer;
+    }
+
+    .batch-btn:hover:not(:disabled) {
+        background: var(--bilibili-blue-dark);
+    }
+
+    .batch-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
     }
 
     .options {
