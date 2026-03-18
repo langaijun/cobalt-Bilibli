@@ -129,7 +129,13 @@
             return formatFileSize(info.resultFile?.size);
 
         case "error":
-            return !retrying ? $t(`error.${info.errorCode}`) : $t("queue.state.retrying");
+            if (retrying) return $t("queue.state.retrying");
+            // 避免翻译未加载/缓存时 probe_timeout 报 i18n 警告且无文案
+            const errKey = `error.${info.errorCode}`;
+            const text = $t(errKey);
+            if (info.errorCode === "queue.ffmpeg.probe_timeout" && (!text || text === errKey))
+                return "探测文件超时，请重试或换较小文件";
+            return text;
 
         case "waiting":
             return $t("queue.state.waiting");
