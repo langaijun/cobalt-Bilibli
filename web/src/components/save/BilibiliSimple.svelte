@@ -23,6 +23,10 @@
     let favlistUrl = $state("");
     let favlistLoading = $state(false);
     let favlistError = $state("");
+    /** 折叠：从收藏夹下载 / 批量下载 */
+    let showFavlist = $state(false);
+    let showBatch = $state(false);
+    let batchAreaEl: HTMLElement | null = null;
 
     const validLink = (url: string) => {
         try {
@@ -133,6 +137,9 @@
             }
             if (data.urls?.length) {
                 batchLinks = data.urls.join("\n");
+                showBatch = true;
+                await tick();
+                batchAreaEl?.scrollIntoView({ behavior: "smooth", block: "nearest" });
             } else {
                 favlistError = "未获取到视频链接";
             }
@@ -162,30 +169,55 @@
 <div class="bilibili-simple">
     <h1 class="title">B站下载器</h1>
 
-    <div class="input-row">
-        <input
-            bind:this={linkInput}
-            bind:value={$link}
-            type="text"
-            class="main-input"
-            placeholder="粘贴B站视频链接"
-            maxlength="512"
-            autocomplete="off"
-            disabled={isDisabled}
-            onkeydown={(e) => {
-                if (e.key === "Enter") doDownload();
-            }}
-            aria-label="B站视频链接"
-        />
-        <button
-            type="button"
-            class="download-btn"
-            disabled={!validLink($link) || isDisabled || isLoading || isBotCheckOngoing}
-            onclick={doDownload}
-            aria-label="下载"
-        >
-            下载
-        </button>
+    <!-- 单链接：输入行 + 下载按钮，下载按钮下为两个折叠入口 -->
+    <div class="top-row">
+        <div class="input-row">
+            <input
+                bind:this={linkInput}
+                bind:value={$link}
+                type="text"
+                class="main-input"
+                placeholder="粘贴B站视频链接"
+                maxlength="512"
+                autocomplete="off"
+                disabled={isDisabled}
+                onkeydown={(e) => {
+                    if (e.key === "Enter") doDownload();
+                }}
+                aria-label="B站视频链接"
+            />
+            <button
+                type="button"
+                class="download-btn"
+                disabled={!validLink($link) || isDisabled || isLoading || isBotCheckOngoing}
+                onclick={doDownload}
+                aria-label="下载"
+            >
+                下载
+            </button>
+        </div>
+        <div class="toggle-buttons">
+            <button
+                type="button"
+                class="toggle-btn"
+                class:expanded={showFavlist}
+                onclick={() => { hapticSwitch(); showFavlist = !showFavlist; }}
+                aria-expanded={showFavlist}
+                aria-label="从收藏夹下载"
+            >
+                从收藏夹下载
+            </button>
+            <button
+                type="button"
+                class="toggle-btn"
+                class:expanded={showBatch}
+                onclick={() => { hapticSwitch(); showBatch = !showBatch; }}
+                aria-expanded={showBatch}
+                aria-label="批量下载"
+            >
+                批量下载
+            </button>
+        </div>
     </div>
 
     <p class="paste-hint">
@@ -197,8 +229,39 @@
         <p class="paste-error" role="alert">{pasteError}</p>
     {/if}
 
-    <div class="batch-section">
-        <div class="favlist-row">
+    <!-- 一、单链接下载：视频/音频选项 -->
+    <div class="download-block">
+        <div class="options">
+            <div class="option-row">
+                <button type="button" class="option-label-btn" class:active={format === "video"} onclick={() => { setFormat("video"); setVideoQuality("720"); }}>
+                    视频 MP4：
+                </button>
+                <div class="segmented">
+                    {#each videoQualities as q}
+                        <button type="button" class="segmented-btn small" class:active={format === "video" && videoQuality === q} onclick={() => { setFormat("video"); setVideoQuality(q); }}>
+                            {q === "1080" ? "1080P" : q === "720" ? "720P" : "480P"}
+                        </button>
+                    {/each}
+                </div>
+            </div>
+            <div class="option-row">
+                <button type="button" class="option-label-btn" class:active={format === "audio"} onclick={() => { setFormat("audio"); setAudioBitrate("128"); }}>
+                    音频 MP3：
+                </button>
+                <div class="segmented">
+                    {#each audioBitrates as b}
+                        <button type="button" class="segmented-btn small" class:active={format === "audio" && audioBitrate === b} onclick={() => { setFormat("audio"); setAudioBitrate(b); }}>
+                            {b}kbps
+                        </button>
+                    {/each}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 二、从收藏夹下载（折叠） -->
+    {#if showFavlist}
+        <div class="download-block collapsible">
             <label for="favlist-url" class="batch-label">收藏夹链接（一键解析）</label>
             <div class="favlist-input-row">
                 <input
@@ -210,89 +273,76 @@
                     disabled={favlistLoading}
                     aria-label="收藏夹页面链接"
                 />
-                <button
-                    type="button"
-                    class="favlist-btn"
-                    disabled={!favlistUrl.trim() || favlistLoading}
-                    onclick={parseFavlist}
-                    aria-label="解析收藏夹"
-                >
+                <button type="button" class="favlist-btn" disabled={!favlistUrl.trim() || favlistLoading} onclick={parseFavlist} aria-label="解析收藏夹">
                     {favlistLoading ? "解析中…" : "解析收藏夹"}
                 </button>
             </div>
             {#if favlistError}
                 <p class="paste-error" role="alert">{favlistError}</p>
             {/if}
+            <div class="options">
+                <div class="option-row">
+                    <button type="button" class="option-label-btn" class:active={format === "video"} onclick={() => { setFormat("video"); setVideoQuality("720"); }}>视频 MP4：</button>
+                    <div class="segmented">
+                        {#each videoQualities as q}
+                            <button type="button" class="segmented-btn small" class:active={format === "video" && videoQuality === q} onclick={() => { setFormat("video"); setVideoQuality(q); }}>{q === "1080" ? "1080P" : q === "720" ? "720P" : "480P"}</button>
+                        {/each}
+                    </div>
+                </div>
+                <div class="option-row">
+                    <button type="button" class="option-label-btn" class:active={format === "audio"} onclick={() => { setFormat("audio"); setAudioBitrate("128"); }}>音频 MP3：</button>
+                    <div class="segmented">
+                        {#each audioBitrates as b}
+                            <button type="button" class="segmented-btn small" class:active={format === "audio" && audioBitrate === b} onclick={() => { setFormat("audio"); setAudioBitrate(b); }}>{b}kbps</button>
+                        {/each}
+                    </div>
+                </div>
+            </div>
         </div>
-        <label for="batch-links" class="batch-label">多链接（收藏夹等）：每行一个链接</label>
-        <textarea
-            id="batch-links"
-            bind:value={batchLinks}
-            class="batch-textarea"
-            placeholder="https://www.bilibili.com/video/BVxxx&#10;https://www.bilibili.com/video/BVyyy"
-            rows="4"
-            disabled={batchInProgress || isDisabled}
-            aria-label="多链接输入，每行一个"
-        />
-        <button
-            type="button"
-            class="batch-btn"
-            disabled={isBatchDisabled}
-            onclick={doBatchDownload}
-            aria-label="批量下载"
-        >
-            批量下载（{parseBatchUrls(batchLinks).length} 个）
-        </button>
-    </div>
+    {/if}
 
-    <div class="options">
-        <!-- 第一行：点「视频 MP4」即选视频+默认720P；右侧可改画质 -->
-        <div class="option-row">
+    <!-- 三、批量下载（折叠） -->
+    {#if showBatch}
+        <div class="download-block collapsible" bind:this={batchAreaEl}>
+            <label for="batch-links" class="batch-label">多链接（收藏夹等）：每行一个链接</label>
+            <textarea
+                id="batch-links"
+                bind:value={batchLinks}
+                class="batch-textarea"
+                placeholder="https://www.bilibili.com/video/BVxxx&#10;https://www.bilibili.com/video/BVyyy"
+                rows="4"
+                disabled={batchInProgress || isDisabled}
+                aria-label="多链接输入，每行一个"
+            />
             <button
                 type="button"
-                class="option-label-btn"
-                class:active={format === "video"}
-                onclick={() => { setFormat("video"); setVideoQuality("720"); }}
+                class="batch-btn"
+                disabled={isBatchDisabled}
+                onclick={doBatchDownload}
+                aria-label="批量下载"
             >
-                视频 MP4：
+                批量下载（{parseBatchUrls(batchLinks).length} 个）
             </button>
-            <div class="segmented">
-                {#each videoQualities as q}
-                    <button
-                        type="button"
-                        class="segmented-btn small"
-                        class:active={format === "video" && videoQuality === q}
-                        onclick={() => { setFormat("video"); setVideoQuality(q); }}
-                    >
-                        {q === "1080" ? "1080P" : q === "720" ? "720P" : "480P"}
-                    </button>
-                {/each}
+            <div class="options">
+                <div class="option-row">
+                    <button type="button" class="option-label-btn" class:active={format === "video"} onclick={() => { setFormat("video"); setVideoQuality("720"); }}>视频 MP4：</button>
+                    <div class="segmented">
+                        {#each videoQualities as q}
+                            <button type="button" class="segmented-btn small" class:active={format === "video" && videoQuality === q} onclick={() => { setFormat("video"); setVideoQuality(q); }}>{q === "1080" ? "1080P" : q === "720" ? "720P" : "480P"}</button>
+                        {/each}
+                    </div>
+                </div>
+                <div class="option-row">
+                    <button type="button" class="option-label-btn" class:active={format === "audio"} onclick={() => { setFormat("audio"); setAudioBitrate("128"); }}>音频 MP3：</button>
+                    <div class="segmented">
+                        {#each audioBitrates as b}
+                            <button type="button" class="segmented-btn small" class:active={format === "audio" && audioBitrate === b} onclick={() => { setFormat("audio"); setAudioBitrate(b); }}>{b}kbps</button>
+                        {/each}
+                    </div>
+                </div>
             </div>
         </div>
-        <!-- 第二行：点「音频 MP3」即选音频+默认128kbps；右侧可改码率 -->
-        <div class="option-row">
-            <button
-                type="button"
-                class="option-label-btn"
-                class:active={format === "audio"}
-                onclick={() => { setFormat("audio"); setAudioBitrate("128"); }}
-            >
-                音频 MP3：
-            </button>
-            <div class="segmented">
-                {#each audioBitrates as b}
-                    <button
-                        type="button"
-                        class="segmented-btn small"
-                        class:active={format === "audio" && audioBitrate === b}
-                        onclick={() => { setFormat("audio"); setAudioBitrate(b); }}
-                    >
-                        {b}kbps
-                    </button>
-                {/each}
-            </div>
-        </div>
-    </div>
+    {/if}
 
     <div class="status" aria-live="polite">
         {statusText}
@@ -320,9 +370,16 @@
         margin: 0 0 0.5rem 0;
     }
 
-    .input-row {
+    .top-row {
         display: flex;
         width: 100%;
+        gap: 1rem;
+        align-items: flex-start;
+    }
+
+    .input-row {
+        flex: 1;
+        display: flex;
         gap: 0;
         border-radius: var(--border-radius);
         overflow: hidden;
@@ -368,6 +425,35 @@
         opacity: 0.5;
     }
 
+    .toggle-buttons {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        flex-shrink: 0;
+    }
+
+    .toggle-btn {
+        padding: 10px 14px;
+        font-size: 13px;
+        color: var(--bilibili-blue);
+        background: var(--primary);
+        border: 1.5px solid var(--input-border);
+        border-radius: var(--border-radius);
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .toggle-btn:hover {
+        border-color: var(--bilibili-blue);
+        background: var(--button-hover-transparent);
+    }
+
+    .toggle-btn.expanded {
+        background: var(--bilibili-blue);
+        color: #fff;
+        border-color: var(--bilibili-blue);
+    }
+
     .paste-link {
         align-self: flex-start;
         font-size: 13px;
@@ -403,11 +489,15 @@
         color: var(--bilibili-blue);
     }
 
-    .batch-section {
+    .download-block {
         width: 100%;
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
+    }
+
+    .download-block.collapsible {
+        margin-top: 0.25rem;
     }
 
     .favlist-row {
@@ -589,6 +679,19 @@
     @media screen and (max-width: 535px) {
         .title {
             font-size: 1.25rem;
+        }
+
+        .top-row {
+            flex-direction: column;
+        }
+
+        .toggle-buttons {
+            flex-direction: row;
+            width: 100%;
+        }
+
+        .toggle-btn {
+            flex: 1;
         }
 
         .input-row {
