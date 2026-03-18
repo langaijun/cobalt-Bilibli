@@ -14,6 +14,7 @@
 
     "ffmpeg.probe_failed": "无法探测该文件，可能格式不支持或已损坏",
     "ffmpeg.probe_timeout": "探测文件超时，请重试或换较小文件",
+    "ffmpeg.render_timeout": "重新封装/转码超时，请重试或换较小文件",
     "ffmpeg.out_of_memory": "内存不足，无法继续",
     "ffmpeg.no_input_format": "不支持该文件格式",
     "ffmpeg.no_input_type": "不支持该文件类型",

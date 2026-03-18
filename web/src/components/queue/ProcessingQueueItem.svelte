@@ -135,6 +135,8 @@
             const text = $t(errKey);
             if (info.errorCode === "queue.ffmpeg.probe_timeout" && (!text || text === errKey))
                 return "探测文件超时，请重试或换较小文件";
+            if (info.errorCode === "queue.ffmpeg.render_timeout" && (!text || text === errKey))
+                return "重新封装/转码超时，请重试或换较小文件";
             return text;
 
         case "waiting":

@@ -2,6 +2,8 @@ import LibAVWrapper from "$lib/libav";
 import type { FileInfo } from "$lib/types/libav";
 
 const PROBE_TIMEOUT_MS = 30_000;
+/** 重新封装/转码阶段最大等待时间，避免无限卡住 */
+const RENDER_TIMEOUT_MS = 5 * 60 * 1000; // 5 分钟
 
 const withTimeout = async <T>(p: Promise<T>, ms: number, code: string): Promise<T> => {
     let t: ReturnType<typeof setTimeout> | undefined;
@@ -116,15 +118,22 @@ const ffmpeg = async (
         let render;
 
         try {
-            render = await ff.render({
-                files,
-                output,
-                args,
-            });
+            render = await withTimeout(
+                ff.render({
+                    files,
+                    output,
+                    args,
+                }),
+                RENDER_TIMEOUT_MS,
+                "queue.ffmpeg.render_timeout"
+            );
         } catch (e) {
             console.error("error from the ffmpeg worker @ render:");
             console.error(e);
-            // TODO: more granular error codes
+            if (e instanceof Error && e.message === "queue.ffmpeg.render_timeout") {
+                error("queue.ffmpeg.render_timeout");
+                return self.close();
+            }
             return error("queue.ffmpeg.crashed");
         }
 
