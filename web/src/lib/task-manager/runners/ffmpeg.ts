@@ -33,7 +33,9 @@ export const runFFmpegWorker = async (
 
     const worker = new FFmpegWorker();
 
-    // 有时 Chrome 在批量任务中无法及时启动 libav WASM，故延长判定时间并增加重试
+    // unsubscribe 必须在 setInterval 之前声明，否则回调里会触发 "Cannot access before initialization"
+    let unsubscribe: () => void = () => {};
+
     let bumpAttempts = 0;
     const startCheck = setInterval(async () => {
         bumpAttempts++;
@@ -54,7 +56,7 @@ export const runFFmpegWorker = async (
         }
     }, START_CHECK_INTERVAL_MS);
 
-    const unsubscribe = queue.subscribe((queue: CobaltQueue) => {
+    unsubscribe = queue.subscribe((queue: CobaltQueue) => {
         if (!queue[parentId]) {
             killWorker(worker, unsubscribe, startCheck);
         }

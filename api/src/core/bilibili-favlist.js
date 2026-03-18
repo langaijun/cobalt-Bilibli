@@ -7,6 +7,7 @@ const BILI_FAV_LIST = "https://api.bilibili.com/x/v3/fav/resource/list";
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 const REFERER = "https://www.bilibili.com/";
 const ORIGIN = "https://www.bilibili.com";
+import { env } from "../config.js";
 
 function parseFavlistUrl(pageUrl) {
     try {
@@ -55,6 +56,9 @@ export async function handleBilibiliFavlist(req, res) {
         "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
         Accept: "application/json",
     };
+    if (env.biliSessdata) {
+        headers.Cookie = `SESSDATA=${env.biliSessdata}`;
+    }
 
     try {
         for (;;) {

@@ -73,6 +73,11 @@ export const loadEnvs = (env = process.env) => {
         corsURL: env.CORS_URL,
 
         cookiePath: env.COOKIE_PATH,
+        /**
+         * 可选：用于访问需要登录的 B 站接口（如部分收藏夹/风控场景）。
+         * 仅在服务端使用，不会下发给前端。
+         */
+        biliSessdata: env.BILI_SESSDATA,
 
         rateLimitWindow: (env.RATELIMIT_WINDOW && parseInt(env.RATELIMIT_WINDOW)) || 60,
         rateLimitMax: (env.RATELIMIT_MAX && parseInt(env.RATELIMIT_MAX)) || 20,
