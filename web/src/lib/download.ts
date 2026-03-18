@@ -113,9 +113,8 @@ export const downloadFile = ({ url, file, urlType }: DownloadFileParams) => {
         return openSavingDialog({ url, file, urlType });
     }
 
-    /* tunnel 直链用 fetch+blob 触发下载，不依赖 window.open，批量下载时不会因无用户手势而弹「选择保存方式」 */
-    const isTunnel = url?.includes("/tunnel");
-    if (url && pref === "download" && isTunnel) {
+    /* 所有 URL 下载都优先用 fetch+blob，不依赖 window.open，避免「新标签页被拦截」弹窗 */
+    if (url && pref === "download") {
         downloadUrlAsBlob(url).catch(() => {
             openSavingDialog({
                 url,
