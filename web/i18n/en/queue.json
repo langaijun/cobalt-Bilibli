@@ -12,5 +12,7 @@
 
     "state.running.remux": "remuxing",
     "state.running.fetch": "downloading",
-    "state.running.encode": "transcoding"
+    "state.running.encode": "transcoding",
+
+    "stuck_hint": "If it stays stuck, disable ad blocker or whitelist this site"
 }

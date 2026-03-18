@@ -1,8 +1,8 @@
 {
     "no_final_file": "未生成最终文件",
-    "worker_didnt_start": "无法启动处理 Worker",
+    "worker_didnt_start": "无法启动处理 Worker（请尝试关闭广告拦截扩展或将本站加入白名单）",
 
-    "generic_error": "处理 Worker 崩溃，详见控制台",
+    "generic_error": "处理 Worker 崩溃（请尝试关闭广告拦截扩展或将本站加入白名单），详见控制台",
 
     "fetch.crashed": "下载 Worker 崩溃，详见控制台",
     "fetch.bad_response": "无法访问文件隧道",

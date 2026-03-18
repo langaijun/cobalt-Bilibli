@@ -4,8 +4,9 @@
  */
 
 const BILI_FAV_LIST = "https://api.bilibili.com/x/v3/fav/resource/list";
-const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
+const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 const REFERER = "https://www.bilibili.com/";
+const ORIGIN = "https://www.bilibili.com";
 
 function parseFavlistUrl(pageUrl) {
     try {
@@ -50,6 +51,9 @@ export async function handleBilibiliFavlist(req, res) {
     const headers = {
         "User-Agent": UA,
         Referer: REFERER,
+        Origin: ORIGIN,
+        "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.8",
+        Accept: "application/json",
     };
 
     try {
@@ -68,13 +72,14 @@ export async function handleBilibiliFavlist(req, res) {
                 break;
             }
 
-            const list = data.data?.medias || [];
+            const list = data.data?.medias ?? data.data?.resources ?? [];
             for (const m of list) {
-                const bvid = m.bvid || m.id?.bvid;
+                const bvid = m.bvid ?? m.bv_id ?? m.id?.bvid;
                 if (bvid) urls.push(`https://www.bilibili.com/video/${bvid}`);
             }
 
-            if (!data.data?.has_more) break;
+            const hasMore = data.data?.has_more ?? (list.length >= ps);
+            if (!hasMore) break;
             pn += 1;
         }
     } catch (e) {

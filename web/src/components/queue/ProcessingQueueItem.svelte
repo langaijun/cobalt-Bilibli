@@ -165,6 +165,19 @@
     }));
 
     const MediaTypeIcon = $derived(itemIcons[info.mediaType]);
+
+    /** 是否卡在「开始转码/开始重封装」阶段（常因广告拦截拦截 Worker） */
+    const isStartingTranscode = $derived(
+        info.state === "running" &&
+        (() => {
+            const firstUnstarted = info.pipeline.find(
+                (w) =>
+                    !info.pipelineResults[w.workerId] &&
+                    (!$currentTasks[w.workerId] || !$currentTasks[w.workerId].progress)
+            );
+            return firstUnstarted && (firstUnstarted.worker === "encode" || firstUnstarted.worker === "remux");
+        })()
+    );
 </script>
 
 <!-- svelte-ignore a11y_no_noninteractive_tabindex -->
@@ -214,6 +227,9 @@
             <div class="status-text">
                 {statusText}
             </div>
+            {#if isStartingTranscode}
+                <div class="status-hint" role="note">{$t("queue.stuck_hint")}</div>
+            {/if}
         </div>
     </div>
 
@@ -337,6 +353,13 @@
 
     .status-text {
         line-break: normal;
+    }
+
+    .status-hint {
+        font-size: 11px;
+        color: var(--gray);
+        margin-top: 4px;
+        opacity: 0.9;
     }
 
     /*

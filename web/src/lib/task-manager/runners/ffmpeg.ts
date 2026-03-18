@@ -9,6 +9,11 @@ import type { CobaltQueue } from "$lib/types/queue";
 
 let startAttempts = 0;
 
+const START_CHECK_INTERVAL_MS = 500;
+const START_CHECK_TICKS_BEFORE_RETRY = 24; // 12s：给 WASM 初始化与 probe 足够时间
+const MAX_START_RETRIES = 12;
+const DELAY_BEFORE_RETRY_MS = 1500; // 重试前等待，让上一个 Worker 释放资源
+
 export const runFFmpegWorker = async (
     workerId: string,
     parentId: string,
@@ -19,21 +24,23 @@ export const runFFmpegWorker = async (
     yesthreads: boolean,
     resetStartCounter = false,
 ) => {
-    const worker = new FFmpegWorker();
-
-    // sometimes chrome refuses to start libav wasm,
-    // so we check if it started, try 10 more times if not, and kill self if it still doesn't work
-    // TODO: fix the underlying issue because this is ridiculous
-
     if (resetStartCounter) startAttempts = 0;
 
+    // 重试前短暂等待，避免连续创建 Worker 导致浏览器未释放资源
+    if (startAttempts > 0) {
+        await new Promise((r) => setTimeout(r, DELAY_BEFORE_RETRY_MS));
+    }
+
+    const worker = new FFmpegWorker();
+
+    // 有时 Chrome 在批量任务中无法及时启动 libav WASM，故延长判定时间并增加重试
     let bumpAttempts = 0;
     const startCheck = setInterval(async () => {
         bumpAttempts++;
 
-        if (bumpAttempts === 10) {
+        if (bumpAttempts === START_CHECK_TICKS_BEFORE_RETRY) {
             startAttempts++;
-            if (startAttempts <= 10) {
+            if (startAttempts <= MAX_START_RETRIES) {
                 killWorker(worker, unsubscribe, startCheck);
                 return await runFFmpegWorker(
                     workerId, parentId,
@@ -45,7 +52,7 @@ export const runFFmpegWorker = async (
                 return itemError(parentId, workerId, "queue.worker_didnt_start");
             }
         }
-    }, 500);
+    }, START_CHECK_INTERVAL_MS);
 
     const unsubscribe = queue.subscribe((queue: CobaltQueue) => {
         if (!queue[parentId]) {
