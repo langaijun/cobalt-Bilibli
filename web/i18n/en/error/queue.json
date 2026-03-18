@@ -13,6 +13,7 @@
     "fetch.network_error": "downloading was interrupted by a network issue",
 
     "ffmpeg.probe_failed": "couldn't probe this file, it may be unsupported or corrupted",
+    "ffmpeg.probe_timeout": "probe timed out, try again or use a smaller file",
     "ffmpeg.out_of_memory": "not enough available memory, can't continue",
     "ffmpeg.no_input_format": "the file's format isn't supported",
     "ffmpeg.no_input_type": "the file's type isn't supported",
