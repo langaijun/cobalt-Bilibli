@@ -17,6 +17,59 @@ function extractBestQuality(dashData) {
     return [ bestVideo, bestAudio ];
 }
 
+const bilibiliHeaders = {
+    "user-agent": genericUserAgent,
+    "referer": "https://www.bilibili.com/"
+};
+
+/** 当页面无 __playinfo__ 时，用 B 站官方 API 获取 cid + playurl（dash） */
+async function com_download_via_api(id, partId) {
+    const viewUrl = new URL("https://api.bilibili.com/x/web-interface/view");
+    viewUrl.searchParams.set("bvid", id);
+
+    const viewRes = await fetch(viewUrl, { headers: bilibiliHeaders }).then(r => r.json()).catch(() => ({}));
+    const pages = viewRes?.data?.pages;
+    if (!pages?.length) return { error: "fetch.empty" };
+
+    const pageIndex = partId ? Math.max(0, parseInt(partId, 10) - 1) : 0;
+    const cid = pages[pageIndex]?.cid;
+    if (!cid) return { error: "fetch.empty" };
+
+    const playUrl = new URL("https://api.bilibili.com/x/player/playurl");
+    playUrl.searchParams.set("bvid", id);
+    playUrl.searchParams.set("cid", String(cid));
+    playUrl.searchParams.set("fnval", "16");  // dash
+    playUrl.searchParams.set("fnver", "0");
+    playUrl.searchParams.set("fourk", "0");
+
+    const playRes = await fetch(playUrl, { headers: bilibiliHeaders }).then(r => r.json()).catch(() => ({}));
+    const dash = playRes?.data?.dash;
+    if (!dash?.video?.length || !dash?.audio?.length) return { error: "fetch.empty" };
+
+    const norm = (arr) => arr.map((v) => ({ ...v, baseUrl: v.base_url || v.baseUrl, url: v.base_url || v.baseUrl }));
+    const [ video, audio ] = extractBestQuality({
+        video: norm(dash.video),
+        audio: norm(dash.audio)
+    });
+    if (!video || !audio) return { error: "fetch.empty" };
+
+    const videoUrl = video.baseUrl || video.url;
+    const audioUrl = audio.baseUrl || audio.url;
+    if (!videoUrl || !audioUrl) return { error: "fetch.empty" };
+
+    const duration = (video.duration || audio.duration || 0) / 1000;
+    if (duration > env.durationLimit) return { error: "content.too_long" };
+
+    let filenameBase = `bilibili_${id}`;
+    if (partId) filenameBase += `_${partId}`;
+
+    return {
+        urls: [videoUrl, audioUrl],
+        audioFilename: `${filenameBase}_audio`,
+        filename: `${filenameBase}_${video.width || 0}x${video.height || 0}.mp4`,
+    };
+}
+
 async function com_download(id, partId) {
     const url = new URL(`https://bilibili.com/video/${id}`);
 
@@ -25,9 +78,7 @@ async function com_download(id, partId) {
     }
 
     const html = await fetch(url, {
-        headers: {
-            "user-agent": genericUserAgent
-        }
+        headers: { "user-agent": genericUserAgent }
     })
     .then(r => r.text())
     .catch(() => {});
@@ -36,8 +87,9 @@ async function com_download(id, partId) {
         return { error: "fetch.fail" }
     }
 
-    if (!(html.includes('<script>window.__playinfo__=') && html.includes('"video_codecid"'))) {
-        return { error: "fetch.empty" };
+    const hasPlayinfo = html.includes('<script>window.__playinfo__=') && html.includes('"video_codecid"');
+    if (!hasPlayinfo) {
+        return com_download_via_api(id, partId);
     }
 
     const streamData = JSON.parse(
