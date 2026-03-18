@@ -25,6 +25,10 @@
     let favlistUrl = $state("");
     let favlistLoading = $state(false);
     let favlistError = $state("");
+    /** 解析收藏夹时是否用 view 接口校验，只保留可播放视频 */
+    let favlistValidate = $state(false);
+    /** 上次解析收藏夹时过滤掉的无效数（用于在批量列表处提示） */
+    let favlistInvalidHint = $state(0);
     let batchAreaEl: HTMLElement | null = null;
 
     const validLink = (url: string) => {
@@ -159,10 +163,13 @@
         if (!u || favlistLoading) return;
         hapticSwitch();
         favlistError = "";
+        favlistInvalidHint = 0;
         favlistLoading = true;
         try {
             const apiBase = typeof window !== "undefined" ? currentApiURL() : "";
-            const res = await fetch(`${apiBase}/api/bilibili-favlist?url=${encodeURIComponent(u)}`);
+            const params = new URLSearchParams({ url: u });
+            if (favlistValidate) params.set("validate", "1");
+            const res = await fetch(`${apiBase}/api/bilibili-favlist?${params}`);
             const data = await res.json().catch(() => ({}));
             if (!res.ok) {
                 favlistError = data.error || "解析失败";
@@ -172,9 +179,14 @@
                 const urls = data.urls.slice(0, BATCH_MAX);
                 batchLinks = urls.join("\n");
                 saveView.set("batch");
+                if (data.invalidCount != null && data.invalidCount > 0) {
+                    favlistError = ""; // 成功，无效数在下方 batch 区域用 favlistInvalidHint 显示
+                }
+                favlistInvalidHint = data.invalidCount ?? 0;
                 await tick();
                 batchAreaEl?.scrollIntoView({ behavior: "smooth", block: "nearest" });
             } else {
+                favlistInvalidHint = 0;
                 favlistError = data.message || "未获取到视频链接";
             }
         } catch {
@@ -287,6 +299,10 @@
                     {favlistLoading ? "解析中…" : "解析收藏夹"}
                 </button>
             </div>
+            <label class="favlist-validate-toggle">
+                <input type="checkbox" bind:checked={favlistValidate} aria-label="校验有效视频" />
+                <span>校验有效视频（仅保留可播放，用 view 接口过滤下架/无效）</span>
+            </label>
             {#if favlistError}
                 <p class="paste-error" role="alert">{favlistError}</p>
             {/if}
@@ -339,7 +355,12 @@
             {/if}
             {#if batchUrlListCapped.length > 0}
                 <div class="batch-list-section">
-                    <p class="batch-list-title">链接列表（共 {batchUrlListCapped.length} 条，每页 {BATCH_PAGE_SIZE} 条）</p>
+                    <p class="batch-list-title">
+                        链接列表（共 {batchUrlListCapped.length} 条，每页 {BATCH_PAGE_SIZE} 条）
+                        {#if favlistInvalidHint > 0}
+                            <span class="batch-invalid-hint">已过滤 {favlistInvalidHint} 个无效/下架</span>
+                        {/if}
+                    </p>
                     <ul class="batch-list" aria-label="当前页链接">
                         {#each batchPageUrls as url, i}
                             <li class="batch-list-item">{(batchCurrentPage - 1) * BATCH_PAGE_SIZE + i + 1}. {url}</li>
@@ -406,6 +427,18 @@
                             <button type="button" class="segmented-btn small" class:active={format === "audio" && audioBitrate === b} onclick={() => { setFormat("audio"); setAudioBitrate(b); }}>{b}kbps</button>
                         {/each}
                     </div>
+                </div>
+                <div class="option-row server-processing-row">
+                    <label class="server-processing-toggle">
+                        <input
+                            type="checkbox"
+                            checked={serverProcessing}
+                            onchange={(e) => setServerProcessing((e.currentTarget as HTMLInputElement).checked)}
+                            aria-label="服务器处理模式"
+                        />
+                        <span>服务器处理（更稳定）</span>
+                    </label>
+                    <span class="server-processing-hint">关闭浏览器转码/重封装，降低“卡住”概率</span>
                 </div>
             </div>
         </div>
@@ -808,6 +841,28 @@
         font-size: 12px;
         color: var(--text-muted);
         line-height: 1.3;
+    }
+
+    .favlist-validate-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        user-select: none;
+        font-size: 13px;
+        color: var(--text);
+        margin-bottom: 8px;
+    }
+    .favlist-validate-toggle input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--accent);
+    }
+    .batch-invalid-hint {
+        font-size: 12px;
+        color: var(--text-muted);
+        font-weight: normal;
+        margin-left: 6px;
     }
 
     .segmented-btn.active {

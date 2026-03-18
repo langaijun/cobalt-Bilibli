@@ -1,12 +1,17 @@
 /**
  * B 站公开收藏夹解析：从收藏夹页面 URL 拉取视频链接列表。
  * 供前端「从收藏夹下载」使用，GET /api/bilibili-favlist?url=...
+ * 可选 ?validate=1：用 view 接口校验每个 BV，只返回有效视频。
  */
 
 const BILI_FAV_LIST = "https://api.bilibili.com/x/v3/fav/resource/list";
+const BILI_VIEW_API = "https://api.bilibili.com/x/web-interface/view";
 const UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36";
 const REFERER = "https://www.bilibili.com/";
 const ORIGIN = "https://www.bilibili.com";
+const VIEW_CONCURRENCY = 4;
+const VIEW_SLEEP_MS = 300;
+
 import { env } from "../config.js";
 
 function parseFavlistUrl(pageUrl) {
@@ -91,10 +96,46 @@ export async function handleBilibiliFavlist(req, res) {
         return;
     }
 
-    const count = urls.length;
-    const body = { urls, count };
+    let finalUrls = urls;
+    let invalidCount = 0;
+
+    if (urls.length > 0 && (req.query.validate === "1" || req.query.validate === "true")) {
+        const bvids = [...new Set(
+            urls
+                .map((u) => (u.match(/\/video\/(BV[0-9A-Za-z]{10})/) || [])[1])
+                .filter(Boolean)
+        )];
+        const valid = [];
+        let i = 0;
+        async function viewWorker() {
+            while (i < bvids.length) {
+                const bv = bvids[i++];
+                try {
+                    const viewRes = await fetch(
+                        `${BILI_VIEW_API}?bvid=${bv}`,
+                        { headers: { ...headers, Accept: "application/json" } }
+                    );
+                    const viewData = await viewRes.json().catch(() => ({}));
+                    if (viewData && viewData.code === 0) {
+                        valid.push(`https://www.bilibili.com/video/${bv}`);
+                    }
+                } catch {
+                    // 网络错误视为无效，不加入 valid
+                }
+                await new Promise((r) => setTimeout(r, VIEW_SLEEP_MS));
+            }
+        }
+        await Promise.all(Array.from({ length: VIEW_CONCURRENCY }, viewWorker));
+        finalUrls = valid;
+        invalidCount = bvids.length - valid.length;
+    }
+
+    const count = finalUrls.length;
+    const body = { urls: finalUrls, count };
+    if (invalidCount > 0) body.invalidCount = invalidCount;
     if (count === 0) {
         body.message = "该收藏夹为空或仅登录后可查看（公开收藏夹无需登录）";
+        if (invalidCount > 0) body.message = `经 view 校验后无有效视频（共 ${invalidCount} 个无效/下架）`;
     }
     res.json(body);
 }
