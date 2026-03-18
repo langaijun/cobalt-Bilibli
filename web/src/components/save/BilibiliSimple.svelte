@@ -164,7 +164,7 @@
                 await tick();
                 batchAreaEl?.scrollIntoView({ behavior: "smooth", block: "nearest" });
             } else {
-                favlistError = "未获取到视频链接";
+                favlistError = data.message || "未获取到视频链接";
             }
         } catch {
             favlistError = "网络请求失败";

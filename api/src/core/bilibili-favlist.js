@@ -82,5 +82,10 @@ export async function handleBilibiliFavlist(req, res) {
         return;
     }
 
-    res.json({ urls, count: urls.length });
+    const count = urls.length;
+    const body = { urls, count };
+    if (count === 0) {
+        body.message = "该收藏夹为空或仅登录后可查看（公开收藏夹无需登录）";
+    }
+    res.json(body);
 }
