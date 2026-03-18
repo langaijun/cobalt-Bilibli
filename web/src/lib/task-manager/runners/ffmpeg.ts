@@ -80,10 +80,31 @@ export const runFFmpegWorker = async (
     });
 
     worker.onerror = (e) => {
+        // 注意：这里通常只能拿到通用 error 事件；更具体的错误会在 worker 内部打印/回传
         console.error("ffmpeg worker crashed:", e);
+        try {
+            // ErrorEvent 在部分浏览器可取到 message/filename/lineno/colno
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const ee: any = e as any;
+            if (ee?.message || ee?.filename) {
+                console.error("ffmpeg worker error details:", {
+                    message: ee?.message,
+                    filename: ee?.filename,
+                    lineno: ee?.lineno,
+                    colno: ee?.colno,
+                });
+            }
+        } catch {}
         killWorker(worker, unsubscribe, startCheck);
 
-        return itemError(parentId, workerId, "queue.generic_error");
+        // 用更贴近原因的错误码，便于用户判断是转码侧崩溃
+        return itemError(parentId, workerId, "queue.ffmpeg.crashed");
+    };
+
+    worker.onmessageerror = (e) => {
+        console.error("ffmpeg worker messageerror:", e);
+        killWorker(worker, unsubscribe, startCheck);
+        return itemError(parentId, workerId, "queue.ffmpeg.crashed");
     };
 
     let totalDuration: number | null = null;

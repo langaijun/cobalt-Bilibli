@@ -156,3 +156,37 @@ self.onmessage = async (event: MessageEvent) => {
         await ffmpeg(ed.variant, ed.files, ed.args, ed.output, ed.yesthreads);
     }
 }
+
+// 将 worker 内部的真实错误尽量回传给主线程（否则主线程只能拿到一个模糊的 Worker error 事件）
+self.addEventListener("error", (e) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const ee: any = e as any;
+    try {
+        self.postMessage({
+            cobaltFFmpegWorker: {
+                error: "queue.ffmpeg.crashed",
+                debug: {
+                    message: ee?.message,
+                    filename: ee?.filename,
+                    lineno: ee?.lineno,
+                    colno: ee?.colno,
+                }
+            }
+        });
+    } catch {}
+});
+
+self.addEventListener("unhandledrejection", (e) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const rr: any = e as any;
+    try {
+        self.postMessage({
+            cobaltFFmpegWorker: {
+                error: "queue.ffmpeg.crashed",
+                debug: {
+                    reason: String(rr?.reason ?? "unknown"),
+                }
+            }
+        });
+    } catch {}
+});
