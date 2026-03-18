@@ -49,6 +49,17 @@
     let videoQuality = $derived($settings.save.videoQuality);
     let audioBitrate = $derived($settings.save.audioBitrate);
 
+    // 服务器处理模式：等价于 localProcessing=disabled（API 返回 tunnel，由服务端 ffmpeg 处理 merge/remux 等）
+    let serverProcessing = $derived($settings.save.localProcessing === "disabled");
+    function setServerProcessing(enabled: boolean) {
+        hapticSwitch();
+        updateSetting({
+            save: {
+                localProcessing: enabled ? "disabled" : "preferred",
+            },
+        });
+    }
+
     function setFormat(f: Format) {
         hapticSwitch();
         updateSetting({
@@ -244,6 +255,18 @@
                         {/each}
                     </div>
                 </div>
+                <div class="option-row server-processing-row">
+                    <label class="server-processing-toggle">
+                        <input
+                            type="checkbox"
+                            checked={serverProcessing}
+                            onchange={(e) => setServerProcessing((e.currentTarget as HTMLInputElement).checked)}
+                            aria-label="服务器处理模式"
+                        />
+                        <span>服务器处理（更稳定）</span>
+                    </label>
+                    <span class="server-processing-hint">关闭浏览器转码/重封装，降低“卡住”概率</span>
+                </div>
             </div>
         </div>
     {:else if $saveView === "favlist"}
@@ -283,6 +306,18 @@
                             <button type="button" class="segmented-btn small" class:active={format === "audio" && audioBitrate === b} onclick={() => { setFormat("audio"); setAudioBitrate(b); }}>{b}kbps</button>
                         {/each}
                     </div>
+                </div>
+                <div class="option-row server-processing-row">
+                    <label class="server-processing-toggle">
+                        <input
+                            type="checkbox"
+                            checked={serverProcessing}
+                            onchange={(e) => setServerProcessing((e.currentTarget as HTMLInputElement).checked)}
+                            aria-label="服务器处理模式"
+                        />
+                        <span>服务器处理（更稳定）</span>
+                    </label>
+                    <span class="server-processing-hint">关闭浏览器转码/重封装，降低“卡住”概率</span>
                 </div>
             </div>
         </div>
@@ -744,6 +779,35 @@
     .segmented-btn.small {
         padding: 8px 14px;
         font-size: 13px;
+    }
+
+    .server-processing-row {
+        align-items: center;
+        gap: 10px;
+        margin-top: 6px;
+        flex-wrap: wrap;
+    }
+
+    .server-processing-toggle {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        user-select: none;
+        font-weight: 600;
+        color: var(--text);
+    }
+
+    .server-processing-toggle input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: var(--accent);
+    }
+
+    .server-processing-hint {
+        font-size: 12px;
+        color: var(--text-muted);
+        line-height: 1.3;
     }
 
     .segmented-btn.active {
