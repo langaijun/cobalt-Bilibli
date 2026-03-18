@@ -1,4 +1,5 @@
-import FFmpegWorker from "$lib/task-manager/workers/ffmpeg?worker";
+// 使用 media?worker 避免构建产物名为 ffmpeg-xxx.js，减少被广告拦截规则命中的概率
+import MediaWorker from "$lib/task-manager/workers/media?worker";
 
 import { killWorker } from "$lib/task-manager/run-worker";
 import { updateWorkerProgress } from "$lib/state/task-manager/current-tasks";
@@ -31,7 +32,7 @@ export const runFFmpegWorker = async (
         await new Promise((r) => setTimeout(r, DELAY_BEFORE_RETRY_MS));
     }
 
-    const worker = new FFmpegWorker();
+    const worker = new MediaWorker();
 
     // unsubscribe 必须在 setInterval 之前声明，否则回调里会触发 "Cannot access before initialization"
     let unsubscribe: () => void = () => {};
