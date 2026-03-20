@@ -4,7 +4,7 @@
  * 可选 ?validate=1：用 view 接口校验每个 BV，只保留有效视频。
  *
  * media_id 不能仅靠 fid+mid 后两位拼接；需通过「创建的收藏夹」列表用 fid 查到真实 id。
- * 分页以每页条数为准继续拉取，避免 has_more 偶发错误导致只得到一页。
+ * 视频列表每页请求 ps=40（与网页收藏夹一致）；满页继续拉，短页结合 has_more 判断是否还有下一页。
  */
 
 const BILI_FAV_LIST = "https://api.bilibili.com/x/v3/fav/resource/list";
@@ -90,7 +90,8 @@ async function resolveMediaId(mid, fidTarget, headers) {
 async function fetchAllFavResources(mediaId, headers, order) {
     const urls = [];
     let pn = 1;
-    const ps = 20;
+    /* 与网页收藏夹列表一致，每页约 40 条（减少请求次数） */
+    const ps = 40;
 
     for (let page = 0; page < MAX_RESOURCE_PAGES; page++) {
         const apiUrl = new URL(BILI_FAV_LIST);
@@ -119,8 +120,17 @@ async function fetchAllFavResources(mediaId, headers, order) {
             if (bvid) urls.push(`https://www.bilibili.com/video/${bvid}`);
         }
 
-        /* 满页则继续拉下一页，不盲信 has_more（避免少页） */
-        if (list.length < ps) break;
+        /*
+         * 满 ps 条 → 继续下一页。
+         * 不足 ps 条：若 has_more 仍为 true（接口实际单页可能小于请求 ps），继续；否则结束。
+         */
+        if (list.length < ps) {
+            if (data.data?.has_more) {
+                pn += 1;
+                continue;
+            }
+            break;
+        }
         pn += 1;
     }
 

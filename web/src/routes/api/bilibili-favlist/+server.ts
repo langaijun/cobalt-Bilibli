@@ -75,7 +75,8 @@ async function fetchAllFavResources(
 ): Promise<{ urls: string[]; error?: string }> {
 	const urls: string[] = [];
 	let pn = 1;
-	const ps = 20;
+	/** 与 B 站网页收藏夹列表每页条数对齐 */
+	const ps = 40;
 
 	for (let page = 0; page < MAX_RESOURCE_PAGES; page++) {
 		const apiUrl = new URL(BILI_FAV_LIST);
@@ -103,7 +104,13 @@ async function fetchAllFavResources(
 			if (bvid) urls.push(`https://www.bilibili.com/video/${bvid}`);
 		}
 
-		if (list.length < ps) break;
+		if (list.length < ps) {
+			if (data.data?.has_more) {
+				pn += 1;
+				continue;
+			}
+			break;
+		}
 		pn += 1;
 	}
 
