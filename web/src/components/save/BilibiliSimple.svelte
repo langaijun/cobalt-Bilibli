@@ -29,6 +29,8 @@
     let favlistValidate = $state(false);
     /** 解析页：view 校验过滤掉的无效条数 */
     let parseFilteredCount = $state(0);
+    /** 本次解析拿到的链接条数（与文本框内容一致，不受批量上限截断） */
+    let favlistParsedCount = $state(0);
     /** 解析结果（仅展示在本页，不写入批量下载框） */
     let parsedFavlistText = $state("");
     let batchAreaEl: HTMLElement | null = null;
@@ -98,7 +100,8 @@
         }
     }
 
-    const BATCH_MAX = 100;
+    /** 批量下载单次上限（解析收藏夹本身返回全量，仅批量入队受此限制） */
+    const BATCH_MAX = 500;
     const BATCH_PAGE_SIZE = 25;
     /**
      * 两次「解析/入队」请求之间的间隔。
@@ -120,7 +123,7 @@
 
     /** 解析后的全部链接 */
     let batchUrlList = $derived(parseBatchUrls(batchLinks));
-    /** 仅取前 100 条，用于展示与下载 */
+    /** 仅取前 BATCH_MAX 条，用于展示与下载 */
     let batchUrlListCapped = $derived(batchUrlList.slice(0, BATCH_MAX));
     /** 分页：当前页（1-based） */
     let batchCurrentPage = $state(1);
@@ -161,6 +164,7 @@
         hapticSwitch();
         favlistError = "";
         parseFilteredCount = 0;
+        favlistParsedCount = 0;
         parsedFavlistText = "";
         favlistLoading = true;
         try {
@@ -211,11 +215,14 @@
                 return;
             }
             if (data.urls?.length) {
-                const urls = data.urls.slice(0, BATCH_MAX);
+                const urls = data.urls as string[];
                 parsedFavlistText = urls.join("\n");
+                favlistParsedCount =
+                    typeof data.count === "number" ? data.count : urls.length;
                 parseFilteredCount = data.invalidCount ?? 0;
             } else {
                 parseFilteredCount = 0;
+                favlistParsedCount = 0;
                 favlistError = data.message || "未获取到视频链接";
             }
         } catch {
@@ -339,9 +346,12 @@
             {#if parsedFavlistText}
                 <div class="parsed-favlist-block">
                     <label for="parsed-favlist-out" class="batch-label">解析结果（每行一个链接）</label>
-                    {#if parseFilteredCount > 0}
-                        <p class="parse-filter-hint" role="status">已过滤 {parseFilteredCount} 个无效/下架</p>
-                    {/if}
+                    <p class="parse-count-hint" role="status">
+                        共解析到 <strong>{favlistParsedCount}</strong> 条视频链接
+                        {#if parseFilteredCount > 0}
+                            （已过滤 {parseFilteredCount} 条无效/下架）
+                        {/if}
+                    </p>
                     <textarea
                         id="parsed-favlist-out"
                         class="batch-textarea parsed-favlist-textarea"
@@ -357,9 +367,9 @@
             {/if}
         </div>
     {:else if $saveView === "batch"}
-        <!-- 批量下载：最多 100 条，分页每页 25 条 -->
+        <!-- 批量下载：最多 BATCH_MAX 条，分页每页 25 条 -->
         <div class="download-block" bind:this={batchAreaEl}>
-            <label for="batch-links" class="batch-label">多链接（收藏夹等）：每行一个链接，最多处理 100 条</label>
+            <label for="batch-links" class="batch-label">多链接（收藏夹等）：每行一个链接，最多处理 {BATCH_MAX} 条</label>
             <textarea
                 id="batch-links"
                 bind:value={batchLinks}
@@ -838,10 +848,15 @@
         gap: 8px;
     }
 
-    .parse-filter-hint {
+    .parse-filter-hint,
+    .parse-count-hint {
         margin: 0;
         font-size: 0.85rem;
         color: var(--bilibili-blue);
+    }
+
+    .parse-count-hint strong {
+        font-weight: 700;
     }
 
     .parsed-favlist-textarea {
