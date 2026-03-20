@@ -321,6 +321,9 @@
             <p class="favlist-intro">
                 粘贴收藏夹或列表页链接，在本页<strong>解析出视频地址</strong>。可复制后到「批量下载」粘贴；本页不会自动填入批量框。
             </p>
+            <p class="favlist-limit-hint" role="note">
+                提示：「批量下载」单次最多 <strong>{BATCH_MAX}</strong> 条；链接较多时请分批粘贴处理。
+            </p>
             <label for="favlist-url" class="batch-label">列表 / 收藏夹链接</label>
             <div class="favlist-input-row">
                 <input
@@ -346,10 +349,15 @@
             {#if parsedFavlistText}
                 <div class="parsed-favlist-block">
                     <label for="parsed-favlist-out" class="batch-label">解析结果（每行一个链接）</label>
-                    <p class="parse-count-hint" role="status">
-                        共解析到 <strong>{favlistParsedCount}</strong> 条视频链接
+                    <p class="parse-count-hint" role="status" aria-live="polite">
+                        解析完成：共 <strong>{favlistParsedCount}</strong> 条视频链接
                         {#if parseFilteredCount > 0}
                             （已过滤 {parseFilteredCount} 条无效/下架）
+                        {/if}
+                        {#if favlistParsedCount > BATCH_MAX}
+                            <span class="parse-count-warn">
+                                ；批量下载单次最多 {BATCH_MAX} 条，请复制后分批处理。
+                            </span>
                         {/if}
                     </p>
                     <textarea
@@ -581,10 +589,27 @@
 
 
     .favlist-intro {
-        margin: 0 0 12px;
+        margin: 0 0 8px;
         font-size: 0.9rem;
         line-height: 1.45;
         color: var(--secondary, #666);
+    }
+
+    .favlist-limit-hint {
+        margin: 0 0 12px;
+        font-size: 0.82rem;
+        line-height: 1.45;
+        color: var(--text-muted, #888);
+    }
+
+    .favlist-limit-hint strong {
+        color: var(--bilibili-blue);
+        font-weight: 700;
+    }
+
+    .parse-count-warn {
+        color: var(--secondary, #666);
+        font-weight: 500;
     }
 
     .favlist-row {
