@@ -164,10 +164,47 @@
         parsedFavlistText = "";
         favlistLoading = true;
         try {
-            const apiBase = typeof window !== "undefined" ? currentApiURL() : "";
             const params = new URLSearchParams({ url: u });
             if (favlistValidate) params.set("validate", "1");
-            const res = await fetch(`${apiBase}/api/bilibili-favlist?${params}`);
+            const qp = params.toString();
+
+            /**
+             * 前端域名（如 bilibili-live.com）与 API（Railway）不同源时，浏览器会拦跨域 GET，
+             * fetch 抛错 → 之前只显示「网络请求失败」且 DevTools 里可能看不到对方响应。
+             * 优先走本站 /api/bilibili-favlist（Vercel 同域 +server），由服务端代请求 B 站。
+             */
+            const apiBase = currentApiURL();
+            const pageOrigin = window.location.origin;
+            const apiOrigin = new URL(apiBase).origin;
+            const urlsToTry: string[] =
+                pageOrigin === apiOrigin
+                    ? [`${pageOrigin}/api/bilibili-favlist?${qp}`]
+                    : [`/api/bilibili-favlist?${qp}`, `${apiOrigin}/api/bilibili-favlist?${qp}`];
+
+            let res: Response | undefined;
+            for (const reqUrl of urlsToTry) {
+                try {
+                    const r = await fetch(reqUrl);
+                    if (r.ok || r.status === 400) {
+                        res = r;
+                        break;
+                    }
+                    if (r.status === 404 && urlsToTry.length > 1 && reqUrl === urlsToTry[0]) {
+                        continue;
+                    }
+                    res = r;
+                    break;
+                } catch {
+                    /* 试下一个地址 */
+                }
+            }
+
+            if (!res) {
+                favlistError =
+                    "无法连接解析接口。请确认：① 前端已重新部署（含 /api/bilibili-favlist）② 或在 Railway 将 CORS_URL 设为当前站点（如 https://bilibili-live.com）";
+                return;
+            }
+
             const data = await res.json().catch(() => ({}));
             if (!res.ok) {
                 favlistError = data.error || "解析失败";
@@ -208,7 +245,7 @@
         const s = $downloadButtonState;
         if (s === "idle") return "就绪";
         if (s === "think" || s === "check") return "处理中…";
-        if (s === "done") return "下载完成";
+        if (s === "done") return "";
         if (s === "error") return "出错";
         return "就绪";
     });
@@ -414,9 +451,11 @@
         </div>
     {/if}
 
-    <div class="status" aria-live="polite">
-        {statusText}
-    </div>
+    {#if statusText}
+        <div class="status" aria-live="polite">
+            {statusText}
+        </div>
+    {/if}
 </div>
 
 <style>
