@@ -100,6 +100,12 @@
 
     const BATCH_MAX = 100;
     const BATCH_PAGE_SIZE = 25;
+    /**
+     * 两次「解析/入队」请求之间的间隔。
+     * 自建 API 默认约每 IP 每 60 秒 20 次 POST（RATELIMIT_MAX），400ms 会迅速触发「请求过于频繁」。
+     * 3.3s ≈ 每分钟约 18 次，留一点余量；若仍 429 可调大或提高 RATELIMIT_MAX。
+     */
+    const BATCH_SAVE_DELAY_MS = 3300;
 
     /** 从多行文本里解析出有效链接（每行一个，支持从收藏夹复制的一整段） */
     function parseBatchUrls(text: string): string[] {
@@ -142,7 +148,7 @@
         for (let i = 0; i < urls.length; i++) {
             batchCurrent = i + 1;
             await savingHandler({ url: urls[i] });
-            if (i < urls.length - 1) await new Promise((r) => setTimeout(r, 400));
+            if (i < urls.length - 1) await new Promise((r) => setTimeout(r, BATCH_SAVE_DELAY_MS));
         }
         batchInProgress = false;
         batchCurrent = 0;
@@ -384,6 +390,9 @@
             >
                 批量下载（{batchUrlListCapped.length} 个）
             </button>
+            <p class="batch-rate-hint" role="note">
+                每条间隔约 3.3 秒，避免 API 限流（默认约每分钟 20 次解析）；超大列表可分批或提高服务端 RATELIMIT_MAX。
+            </p>
             <div class="options">
                 <div class="option-row">
                     <button type="button" class="option-label-btn" class:active={format === "video"} onclick={() => { setFormat("video"); setVideoQuality("720"); }}>视频 MP4：</button>
@@ -803,6 +812,14 @@
 
     .copy-parsed-btn {
         align-self: flex-start;
+    }
+
+    .batch-rate-hint {
+        margin: 0;
+        width: 100%;
+        font-size: 12px;
+        line-height: 1.4;
+        color: var(--text-muted, #888);
     }
 
     .favlist-validate-toggle {
