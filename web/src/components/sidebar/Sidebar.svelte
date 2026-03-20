@@ -35,7 +35,7 @@
     <div id="sidebar-tabs" role="tablist">
         <div id="sidebar-actions" class="sidebar-inner-container">
             <SaveViewTab view="single" label="下载" icon={IconDownload} />
-            <SaveViewTab view="favlist" label="从收藏夹下载" icon={IconFolder} />
+            <SaveViewTab view="favlist" label="解析地址" icon={IconFolder} />
             <SaveViewTab view="batch" label="批量下载" icon={IconListNumbers} />
             {#if false}
                 <!-- 极简版：仅保留下载。恢复多标签时改为 true 或删除此 if -->

@@ -8,7 +8,7 @@ import { t } from "$lib/i18n/translations";
 import { downloadFile } from "$lib/download";
 import { createDialog } from "$lib/state/dialogs";
 import { downloadButtonState } from "$lib/state/omnibox";
-import { createSavePipeline } from "$lib/task-manager/queue";
+import { createSavePipeline, createTunnelFetchPipeline } from "$lib/task-manager/queue";
 
 import type { CobaltSaveRequestBody } from "$lib/types/api";
 
@@ -101,9 +101,13 @@ export const savingHandler = async ({ url, request, oldTaskId }: SavingHandlerAr
         if (probeResult === 200) {
             downloadButtonState.set("done");
 
-            return downloadFile({
-                url: response.url,
-            });
+            const name = response.filename?.trim() || "download";
+            return createTunnelFetchPipeline(
+                response.url,
+                name,
+                selectedRequest,
+                oldTaskId,
+            );
         } else {
             downloadButtonState.set("error");
             return error(get(t)("error.tunnel.probe"));

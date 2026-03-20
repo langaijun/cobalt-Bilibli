@@ -282,9 +282,12 @@
             </div>
         </div>
     {:else if $saveView === "favlist"}
-        <!-- 从收藏夹下载 -->
+        <!-- 解析收藏夹等为视频链接，供批量下载使用 -->
         <div class="download-block">
-            <label for="favlist-url" class="batch-label">收藏夹链接（一键解析）</label>
+            <p class="favlist-intro">
+                粘贴收藏夹或列表页链接，仅<strong>解析出视频地址</strong>；解析结果会填入「批量下载」，请在批量页点击下载。
+            </p>
+            <label for="favlist-url" class="batch-label">列表 / 收藏夹链接</label>
             <div class="favlist-input-row">
                 <input
                     id="favlist-url"
@@ -293,10 +296,10 @@
                     bind:value={favlistUrl}
                     placeholder="https://space.bilibili.com/xxx/favlist?fid=xxx"
                     disabled={favlistLoading}
-                    aria-label="收藏夹页面链接"
+                    aria-label="列表或收藏夹页面链接"
                 />
-                <button type="button" class="favlist-btn" disabled={!favlistUrl.trim() || favlistLoading} onclick={parseFavlist} aria-label="解析收藏夹">
-                    {favlistLoading ? "解析中…" : "解析收藏夹"}
+                <button type="button" class="favlist-btn" disabled={!favlistUrl.trim() || favlistLoading} onclick={parseFavlist} aria-label="解析地址">
+                    {favlistLoading ? "解析中…" : "解析地址"}
                 </button>
             </div>
             <label class="favlist-validate-toggle">
@@ -560,6 +563,13 @@
         gap: 0.5rem;
     }
 
+
+    .favlist-intro {
+        margin: 0 0 12px;
+        font-size: 0.9rem;
+        line-height: 1.45;
+        color: var(--secondary, #666);
+    }
 
     .favlist-row {
         display: flex;

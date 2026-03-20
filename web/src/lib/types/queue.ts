@@ -11,6 +11,8 @@ type CobaltQueueBaseItem = {
     filename: string,
     mimeType?: string,
     mediaType: CobaltPipelineResultFileType,
+    /** 队列拉取完成后自动触发本地下载（服务端 tunnel 直拉场景） */
+    autoDownloadOnComplete?: boolean,
 };
 
 type CobaltQueueItemWaiting = CobaltQueueBaseItem & {

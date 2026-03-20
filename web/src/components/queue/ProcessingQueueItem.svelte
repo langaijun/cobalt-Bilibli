@@ -43,6 +43,17 @@
     let retrying = $state(false);
     let downloading = $state(false);
 
+    /** 用于服务端 tunnel 入队后：从非 done → done 时自动触发一次本地下载 */
+    let prevState: CobaltQueueItem["state"] | null = $state(null);
+    $effect(() => {
+        const becameDone =
+            prevState !== null && prevState !== "done" && info.state === "done";
+        prevState = info.state;
+        if (info.autoDownloadOnComplete && becameDone && info.resultFile) {
+            download(info.resultFile);
+        }
+    });
+
     const retry = async (info: CobaltQueueItem) => {
         if (info.canRetry && info.originalRequest) {
             retrying = true;

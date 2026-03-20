@@ -22,6 +22,34 @@ const bilibiliHeaders = {
     "referer": "https://www.bilibili.com/"
 };
 
+function viewMeta(viewRes) {
+    const d = viewRes?.data;
+    if (!d) return { title: "", author: "" };
+    return {
+        title: typeof d.title === "string" ? d.title : "",
+        author: d.owner?.name && typeof d.owner.name === "string" ? d.owner.name : "",
+    };
+}
+
+function filenameAttributesFor(id, video, meta) {
+    return {
+        service: "bilibili",
+        id,
+        title: meta.title || id,
+        author: meta.author || "",
+        resolution: `${video.width || 0}x${video.height || 0}`,
+        extension: "mp4",
+    };
+}
+
+function fileMetadataFrom(meta) {
+    if (!meta.title && !meta.author) return undefined;
+    return {
+        title: meta.title || undefined,
+        artist: meta.author || undefined,
+    };
+}
+
 /** 当页面无 __playinfo__ 时，用 B 站官方 API 获取 cid + playurl（dash） */
 async function com_download_via_api(id, partId) {
     const viewUrl = new URL("https://api.bilibili.com/x/web-interface/view");
@@ -60,6 +88,7 @@ async function com_download_via_api(id, partId) {
     const duration = (video.duration || audio.duration || 0) / 1000;
     if (duration > env.durationLimit) return { error: "content.too_long" };
 
+    const meta = viewMeta(viewRes);
     let filenameBase = `bilibili_${id}`;
     if (partId) filenameBase += `_${partId}`;
 
@@ -67,6 +96,8 @@ async function com_download_via_api(id, partId) {
         urls: [videoUrl, audioUrl],
         audioFilename: `${filenameBase}_audio`,
         filename: `${filenameBase}_${video.width || 0}x${video.height || 0}.mp4`,
+        filenameAttributes: filenameAttributesFor(id, video, meta),
+        fileMetadata: fileMetadataFrom(meta),
     };
 }
 
@@ -105,6 +136,11 @@ async function com_download(id, partId) {
         return { error: "fetch.empty" };
     }
 
+    const viewUrl = new URL("https://api.bilibili.com/x/web-interface/view");
+    viewUrl.searchParams.set("bvid", id);
+    const viewResForMeta = await fetch(viewUrl, { headers: bilibiliHeaders }).then(r => r.json()).catch(() => ({}));
+    const meta = viewMeta(viewResForMeta);
+
     let filenameBase = `bilibili_${id}`;
     if (partId) {
         filenameBase += `_${partId}`;
@@ -114,6 +150,8 @@ async function com_download(id, partId) {
         urls: [video.baseUrl, audio.baseUrl],
         audioFilename: `${filenameBase}_audio`,
         filename: `${filenameBase}_${video.width}x${video.height}.mp4`,
+        filenameAttributes: filenameAttributesFor(id, video, meta),
+        fileMetadata: fileMetadataFrom(meta),
     };
 }
 

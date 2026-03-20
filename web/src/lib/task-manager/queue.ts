@@ -143,6 +143,60 @@ const showError = (errorCode: string) => {
     });
 }
 
+const extToMime: Record<string, string> = {
+    mp4: "video/mp4",
+    webm: "video/webm",
+    mkv: "video/x-matroska",
+    mp3: "audio/mpeg",
+    m4a: "audio/mp4",
+    opus: "audio/opus",
+    ogg: "audio/ogg",
+    gif: "image/gif",
+};
+
+/**
+ * 服务端返回单条 tunnel 时走队列中的 fetch 步骤，便于在处理队列里显示进度；
+ * 完成后自动触发下载（与原先直接 fetch+blob 的体验一致）。
+ */
+export const createTunnelFetchPipeline = (
+    tunnelUrl: string,
+    outputFilename: string,
+    request: CobaltSaveRequestBody,
+    oldTaskId?: string,
+) => {
+    const parentId = oldTaskId || uuid();
+    const ext = outputFilename.includes(".")
+        ? outputFilename.split(".").pop()!.toLowerCase()
+        : "mp4";
+    const mimeType = extToMime[ext] || "application/octet-stream";
+    const mediaType = (mimeType.startsWith("video/")
+        ? "video"
+        : mimeType.startsWith("audio/")
+          ? "audio"
+          : "file") as CobaltPipelineResultFileType;
+
+    addItem({
+        id: parentId,
+        state: "waiting",
+        pipeline: [
+            {
+                worker: "fetch",
+                workerId: uuid(),
+                parentId,
+                workerArgs: { url: tunnelUrl },
+            },
+        ],
+        canRetry: true,
+        originalRequest: request,
+        filename: outputFilename,
+        mimeType,
+        mediaType,
+        autoDownloadOnComplete: true,
+    });
+
+    openQueuePopover();
+};
+
 export const createSavePipeline = (
     info: CobaltLocalProcessingResponse,
     request: CobaltSaveRequestBody,
