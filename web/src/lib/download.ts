@@ -116,13 +116,25 @@ export const downloadFile = ({ url, file, urlType }: DownloadFileParams) => {
     /* 所有 URL 下载都优先用 fetch+blob，不依赖 window.open，避免「新标签页被拦截」弹窗 */
     if (url && pref === "download") {
         downloadUrlAsBlob(url).catch(() => {
-            openSavingDialog({
-                url,
-                urlType,
-                body: get(t)("dialog.saving.timeout"),
-            });
+            /* 不再弹「选择保存方式」：静默尝试新标签页（可能被拦截则无提示） */
+            window.open(url, "_blank", "noopener,noreferrer");
         });
         return;
+    }
+
+    /*
+        本地 File（含处理队列完成后自动触发下载）：直接用 blob 链接触发保存，
+        不依赖瞬时的 user activation，否则会误弹「选择保存方式」。
+    */
+    if (file && pref === "download") {
+        const iosFileShareSizeLimit = 1024 * 1024 * 256;
+        if (device.is.iOS) {
+            if (file.size < iosFileShareSizeLimit) {
+                return shareFile(file);
+            }
+            return openFile(file);
+        }
+        return openFile(file);
     }
 
     /*

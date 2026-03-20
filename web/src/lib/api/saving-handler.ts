@@ -41,11 +41,13 @@ export const savingHandler = async ({ url, request, oldTaskId }: SavingHandlerAr
 
     if (!request && !url) return;
 
-    const selectedRequest = request || {
+    const selectedRequest = request
+        ? { ...request, localProcessing: "disabled" as const }
+        : {
         url: url!,
 
-        // not lazy cuz default depends on device capabilities
-        localProcessing: get(settings).save.localProcessing,
+        /* 与 B 站下载器一致：始终服务端处理（tunnel），忽略本地保存的 localProcessing */
+        localProcessing: "disabled",
 
         alwaysProxy: getSetting("save", "alwaysProxy"),
         downloadMode: getSetting("save", "downloadMode"),
@@ -67,7 +69,7 @@ export const savingHandler = async ({ url, request, oldTaskId }: SavingHandlerAr
 
         allowH265: getSetting("save", "allowH265"),
         convertGif: getSetting("save", "convertGif"),
-    }
+    };
 
     const response = await API.request(selectedRequest);
 

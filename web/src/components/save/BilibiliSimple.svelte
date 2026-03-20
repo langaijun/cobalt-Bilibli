@@ -27,8 +27,10 @@
     let favlistError = $state("");
     /** 解析收藏夹时是否用 view 接口校验，只保留可播放视频 */
     let favlistValidate = $state(false);
-    /** 上次解析收藏夹时过滤掉的无效数（用于在批量列表处提示） */
-    let favlistInvalidHint = $state(0);
+    /** 解析页：view 校验过滤掉的无效条数 */
+    let parseFilteredCount = $state(0);
+    /** 解析结果（仅展示在本页，不写入批量下载框） */
+    let parsedFavlistText = $state("");
     let batchAreaEl: HTMLElement | null = null;
 
     const validLink = (url: string) => {
@@ -52,17 +54,6 @@
     );
     let videoQuality = $derived($settings.save.videoQuality);
     let audioBitrate = $derived($settings.save.audioBitrate);
-
-    // 服务器处理模式：等价于 localProcessing=disabled（API 返回 tunnel，由服务端 ffmpeg 处理 merge/remux 等）
-    let serverProcessing = $derived($settings.save.localProcessing === "disabled");
-    function setServerProcessing(enabled: boolean) {
-        hapticSwitch();
-        updateSetting({
-            save: {
-                localProcessing: enabled ? "disabled" : "preferred",
-            },
-        });
-    }
 
     function setFormat(f: Format) {
         hapticSwitch();
@@ -163,7 +154,8 @@
         if (!u || favlistLoading) return;
         hapticSwitch();
         favlistError = "";
-        favlistInvalidHint = 0;
+        parseFilteredCount = 0;
+        parsedFavlistText = "";
         favlistLoading = true;
         try {
             const apiBase = typeof window !== "undefined" ? currentApiURL() : "";
@@ -177,22 +169,26 @@
             }
             if (data.urls?.length) {
                 const urls = data.urls.slice(0, BATCH_MAX);
-                batchLinks = urls.join("\n");
-                saveView.set("batch");
-                if (data.invalidCount != null && data.invalidCount > 0) {
-                    favlistError = ""; // 成功，无效数在下方 batch 区域用 favlistInvalidHint 显示
-                }
-                favlistInvalidHint = data.invalidCount ?? 0;
-                await tick();
-                batchAreaEl?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+                parsedFavlistText = urls.join("\n");
+                parseFilteredCount = data.invalidCount ?? 0;
             } else {
-                favlistInvalidHint = 0;
+                parseFilteredCount = 0;
                 favlistError = data.message || "未获取到视频链接";
             }
         } catch {
             favlistError = "网络请求失败";
         } finally {
             favlistLoading = false;
+        }
+    }
+
+    async function copyParsedUrls() {
+        if (!parsedFavlistText.trim()) return;
+        hapticSwitch();
+        try {
+            await navigator.clipboard.writeText(parsedFavlistText);
+        } catch {
+            /* 忽略 */
         }
     }
 
@@ -267,25 +263,13 @@
                         {/each}
                     </div>
                 </div>
-                <div class="option-row server-processing-row">
-                    <label class="server-processing-toggle">
-                        <input
-                            type="checkbox"
-                            checked={serverProcessing}
-                            onchange={(e) => setServerProcessing((e.currentTarget as HTMLInputElement).checked)}
-                            aria-label="服务器处理模式"
-                        />
-                        <span>服务器处理（更稳定）</span>
-                    </label>
-                    <span class="server-processing-hint">关闭浏览器转码/重封装，降低“卡住”概率</span>
-                </div>
             </div>
         </div>
     {:else if $saveView === "favlist"}
-        <!-- 解析收藏夹等为视频链接，供批量下载使用 -->
+        <!-- 仅解析出视频地址，本页展示 / 复制 -->
         <div class="download-block">
             <p class="favlist-intro">
-                粘贴收藏夹或列表页链接，仅<strong>解析出视频地址</strong>；解析结果会填入「批量下载」，请在批量页点击下载。
+                粘贴收藏夹或列表页链接，在本页<strong>解析出视频地址</strong>。可复制后到「批量下载」粘贴；本页不会自动填入批量框。
             </p>
             <label for="favlist-url" class="batch-label">列表 / 收藏夹链接</label>
             <div class="favlist-input-row">
@@ -309,36 +293,25 @@
             {#if favlistError}
                 <p class="paste-error" role="alert">{favlistError}</p>
             {/if}
-            <div class="options">
-                <div class="option-row">
-                    <button type="button" class="option-label-btn" class:active={format === "video"} onclick={() => { setFormat("video"); setVideoQuality("720"); }}>视频 MP4：</button>
-                    <div class="segmented">
-                        {#each videoQualities as q}
-                            <button type="button" class="segmented-btn small" class:active={format === "video" && videoQuality === q} onclick={() => { setFormat("video"); setVideoQuality(q); }}>{q === "1080" ? "1080P" : q === "720" ? "720P" : "480P"}</button>
-                        {/each}
-                    </div>
+            {#if parsedFavlistText}
+                <div class="parsed-favlist-block">
+                    <label for="parsed-favlist-out" class="batch-label">解析结果（每行一个链接）</label>
+                    {#if parseFilteredCount > 0}
+                        <p class="parse-filter-hint" role="status">已过滤 {parseFilteredCount} 个无效/下架</p>
+                    {/if}
+                    <textarea
+                        id="parsed-favlist-out"
+                        class="batch-textarea parsed-favlist-textarea"
+                        readonly
+                        rows="8"
+                        bind:value={parsedFavlistText}
+                        aria-label="解析出的视频链接"
+                    ></textarea>
+                    <button type="button" class="favlist-btn copy-parsed-btn" onclick={copyParsedUrls}>
+                        复制全部链接
+                    </button>
                 </div>
-                <div class="option-row">
-                    <button type="button" class="option-label-btn" class:active={format === "audio"} onclick={() => { setFormat("audio"); setAudioBitrate("128"); }}>音频 MP3：</button>
-                    <div class="segmented">
-                        {#each audioBitrates as b}
-                            <button type="button" class="segmented-btn small" class:active={format === "audio" && audioBitrate === b} onclick={() => { setFormat("audio"); setAudioBitrate(b); }}>{b}kbps</button>
-                        {/each}
-                    </div>
-                </div>
-                <div class="option-row server-processing-row">
-                    <label class="server-processing-toggle">
-                        <input
-                            type="checkbox"
-                            checked={serverProcessing}
-                            onchange={(e) => setServerProcessing((e.currentTarget as HTMLInputElement).checked)}
-                            aria-label="服务器处理模式"
-                        />
-                        <span>服务器处理（更稳定）</span>
-                    </label>
-                    <span class="server-processing-hint">关闭浏览器转码/重封装，降低“卡住”概率</span>
-                </div>
-            </div>
+            {/if}
         </div>
     {:else if $saveView === "batch"}
         <!-- 批量下载：最多 100 条，分页每页 25 条 -->
@@ -360,9 +333,6 @@
                 <div class="batch-list-section">
                     <p class="batch-list-title">
                         链接列表（共 {batchUrlListCapped.length} 条，每页 {BATCH_PAGE_SIZE} 条）
-                        {#if favlistInvalidHint > 0}
-                            <span class="batch-invalid-hint">已过滤 {favlistInvalidHint} 个无效/下架</span>
-                        {/if}
                     </p>
                     <ul class="batch-list" aria-label="当前页链接">
                         {#each batchPageUrls as url, i}
@@ -430,18 +400,6 @@
                             <button type="button" class="segmented-btn small" class:active={format === "audio" && audioBitrate === b} onclick={() => { setFormat("audio"); setAudioBitrate(b); }}>{b}kbps</button>
                         {/each}
                     </div>
-                </div>
-                <div class="option-row server-processing-row">
-                    <label class="server-processing-toggle">
-                        <input
-                            type="checkbox"
-                            checked={serverProcessing}
-                            onchange={(e) => setServerProcessing((e.currentTarget as HTMLInputElement).checked)}
-                            aria-label="服务器处理模式"
-                        />
-                        <span>服务器处理（更稳定）</span>
-                    </label>
-                    <span class="server-processing-hint">关闭浏览器转码/重封装，降低“卡住”概率</span>
                 </div>
             </div>
         </div>
@@ -824,33 +782,27 @@
         font-size: 13px;
     }
 
-    .server-processing-row {
-        align-items: center;
-        gap: 10px;
-        margin-top: 6px;
-        flex-wrap: wrap;
-    }
-
-    .server-processing-toggle {
-        display: inline-flex;
-        align-items: center;
+    .parsed-favlist-block {
+        width: 100%;
+        margin-top: 12px;
+        display: flex;
+        flex-direction: column;
         gap: 8px;
-        cursor: pointer;
-        user-select: none;
-        font-weight: 600;
-        color: var(--text);
     }
 
-    .server-processing-toggle input[type="checkbox"] {
-        width: 16px;
-        height: 16px;
-        accent-color: var(--accent);
+    .parse-filter-hint {
+        margin: 0;
+        font-size: 0.85rem;
+        color: var(--bilibili-blue);
     }
 
-    .server-processing-hint {
-        font-size: 12px;
-        color: var(--text-muted);
-        line-height: 1.3;
+    .parsed-favlist-textarea {
+        font-size: 13px;
+        line-height: 1.4;
+    }
+
+    .copy-parsed-btn {
+        align-self: flex-start;
     }
 
     .favlist-validate-toggle {
@@ -868,13 +820,6 @@
         height: 16px;
         accent-color: var(--accent);
     }
-    .batch-invalid-hint {
-        font-size: 12px;
-        color: var(--text-muted);
-        font-weight: normal;
-        margin-left: 6px;
-    }
-
     .segmented-btn.active {
         background: var(--bilibili-blue);
         color: #fff;
