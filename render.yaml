@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: cobalt-api
+    env: node
+    buildCommand: pnpm install --frozen-lockfile
+    startCommand: cd api && node src/cobalt.js
+    envVars:
+      - key: API_URL
+        value: https://cobalt-api.onrender.com
+      - key: PORT
+        value: 10000
+      - key: NODE_ENV
+        value: production
+      - key: RUST_LOG
+        value: error
