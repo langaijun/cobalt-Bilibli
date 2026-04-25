@@ -20,7 +20,7 @@ export const requestSession = async () => {
     const response: CobaltSessionResponse = await fetch(apiEndpoint, {
         method: "POST",
         redirect: "manual",
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(60000), // 与 api / server-info 一致，避免冷启动时 session 先超时
         headers: requestHeaders,
     })
     .then(r => r.json())

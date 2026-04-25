@@ -16,7 +16,7 @@ const request = async () => {
 
     const response: CobaltServerInfoResponse = await fetch(apiEndpoint, {
         redirect: "manual",
-        signal: AbortSignal.timeout(20000), // 20s，兼容 Railway 冷启动
+        signal: AbortSignal.timeout(60000), // 与解析请求一致，避免冷启动刚超 20s 就失败
     })
     .then(r => r.json())
     .catch((e) => {

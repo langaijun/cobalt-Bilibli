@@ -93,10 +93,11 @@ const request = async (requestBody: CobaltSaveRequestBody, justRetried = false) 
         }
     }
 
+    // Railway 冷启动 + 拉取 B 站页面/API 常需 15s+，20s 易误判为超时
     const response: Optional<CobaltAPIResponse> = await fetch(api, {
         method: "POST",
         redirect: "manual",
-        signal: AbortSignal.timeout(20000),
+        signal: AbortSignal.timeout(60000),
         body: JSON.stringify(requestBody),
         headers: {
             "Accept": "application/json",
