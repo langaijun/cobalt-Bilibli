@@ -46,23 +46,9 @@
         gap: 15px;
     }
 
-    #terms-note {
-        bottom: 0;
-        color: var(--gray);
-        font-size: 12px;
-        text-align: center;
-        padding-bottom: 6px;
-        font-weight: 500;
-    }
-
     @media screen and (max-width: 535px) {
         #cobalt-save-container {
             padding-top: calc(var(--padding) / 2);
-        }
-
-        #terms-note {
-            font-size: 11px;
-            padding-bottom: 0;
         }
     }
 </style>

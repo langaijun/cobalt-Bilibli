@@ -49,7 +49,9 @@ export class MemoryStorage extends AbstractStorage {
             }
         }
 
-        return new File(outputView, uuid());
+        // 复制为新的 Uint8Array，确保类型满足 BlobPart(ArrayBuffer-backed)
+        const fileChunks = outputView.map((chunk) => new Uint8Array(chunk));
+        return new File(fileChunks, uuid());
     }
 
     #expand(size: number) {

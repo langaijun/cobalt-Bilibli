@@ -66,12 +66,12 @@
         });
     }
 
-    function setVideoQuality(q: string) {
+    function setVideoQuality(q: (typeof videoQualities)[number]) {
         hapticSwitch();
         updateSetting({ save: { videoQuality: q } });
     }
 
-    function setAudioBitrate(b: string) {
+    function setAudioBitrate(b: (typeof audioBitrates)[number]) {
         hapticSwitch();
         updateSetting({ save: { audioBitrate: b } });
     }

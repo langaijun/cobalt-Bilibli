@@ -41,13 +41,13 @@ export const savingHandler = async ({ url, request, oldTaskId }: SavingHandlerAr
 
     if (!request && !url) return;
 
-    const selectedRequest = request
+    const selectedRequest: CobaltSaveRequestBody = request
         ? { ...request, localProcessing: "disabled" as const }
         : {
         url: url!,
 
         /* 与 B 站下载器一致：始终服务端处理（tunnel），忽略本地保存的 localProcessing */
-        localProcessing: "disabled",
+        localProcessing: "disabled" as const,
 
         alwaysProxy: getSetting("save", "alwaysProxy"),
         downloadMode: getSetting("save", "downloadMode"),
